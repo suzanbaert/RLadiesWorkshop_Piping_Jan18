@@ -35,26 +35,48 @@ kickstarter_masterdata <- read_csv("data/kickstarter_data.csv")
 
 
 
-#is there any data in the last 4 columns?
-summary(kickstarter_masterdata)
+#SELECTING COLUMNS
 
+#original dataframe
+kickstarter_masterdata
+
+#selecting columns
 kickstarter_masterdata %>%
-  select(X14, X15, X16, X17)
+  select(category, currency, goal, pledged)
 
-
-#or shorter
+#selecing range of colums
 kickstarter_masterdata %>%
-  select(X14:X17)
+  select(name:deadline)
 
-#
-#or shorter
+#deselecting a column
 kickstarter_masterdata %>%
-  select(X14:X17) %>%
-  summarise(na = sum(!is.na(X14)))
+  select(-(X14:X17)) %>%
+  colnames()
 
+
+#changing the name of a column
 kickstarter_masterdata %>%
-  select(X14:X17) %>%
-  arrange(desc(X14))
+  rename(usd_pledged = `usd pledged`)
 
 
-glimpse(kickstarter_masterdata)
+#saving a new dataframe to use
+kickstarter_data <- kickstarter_masterdata %>%
+  rename(usd_pledged = `usd pledged`) %>%
+  select(-(X14:X17))
+  
+
+
+#FILTERING ROWS
+kickstarter_data %>%
+  count()
+
+
+kickstarter_data %>%
+  group_by(country) %>%
+  count()
+
+
+kickstarter_data %>%
+  group_by(country) %>%
+  summarise(n=n()) %>%
+  arrange(desc(n))

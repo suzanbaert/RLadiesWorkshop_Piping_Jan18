@@ -30,7 +30,8 @@ mtcars %>%
 
 
 #data import
-spotify_masterdata <- read_csv("data/spotify_worldwide_daily_ranking_090118.csv")
+spotify_masterdata <- read_csv("data/spotify_worldwide_daily_ranking.csv")
+
 
 #dimensions of the data
 dim(spotify_masterdata)
@@ -45,6 +46,10 @@ glimpse(spotify_masterdata)
 
 
 
+####
+#GROUP BY
+#COUNT
+####
 
 #how many rows do I have?
 #not really  useful, i could have done this via dim() for instance
@@ -63,7 +68,11 @@ spotify_masterdata %>%
   pull(Region)
 
 
-
+####
+#FILTER
+#SUMMARISE
+#FILTER %in%
+####
 
 
 #discovering belgium, finding 74 190 rows
@@ -84,30 +93,53 @@ spotify_masterdata %>%
   filter(Region == "be") %>%
   summarise(n=n())
 
-#
+#date ranges
 spotify_masterdata %>%
   filter(Region == "be") %>%
   summarise(n=n(),
             firstday = min(Date), lastday = max(Date))
 
-
-
-#what dates do i have data for?
+#summarising streams
 spotify_masterdata %>%
   filter(Region == "be") %>%
-  group_by(Date) %>%
-  summarise(n=n())
+  summarise(avg_streams = mean(Streams), 
+            sd_streams = sd(Streams),
+            max_streams = max(Streams),
+            min_streams = min(Streams))
 
-#Ýwhat is the last date?
-#what dates do i have data for?
-spotify_masterdata %>%
-  filter(Region == "be") %>%
-  group_by(Date) %>%
-  summarise(n=n()) %>%
-  tail()
 
-#or
-#what dates do i have data for?
+#how does that compare to other countries?
 spotify_masterdata %>%
-  filter(Region == "be") %>%
-  summarise(n=n(), first_date = min(Date), last_date = max(Date))
+  group_by(Region) %>%
+  summarise(avg_streams = mean(Streams), 
+            sd_streams = sd(Streams),
+            max_streams = max(Streams),
+            min_streams = min(Streams))
+
+
+#that's messy, which countries have the highest avg_streams?
+spotify_masterdata %>%
+  group_by(Region) %>%
+  summarise(avg_streams = mean(Streams), 
+            sd_streams = sd(Streams),
+            max_streams = max(Streams),
+            min_streams = min(Streams)) %>%
+  arrange(desc(avg_streams))
+
+
+
+#oh no global is in there!
+spotify_masterdata %>%
+  filter(Region != "global") %>%
+  group_by(Region) %>%
+  summarise(avg_streams = mean(Streams), 
+            sd_streams = sd(Streams),
+            max_streams = max(Streams),
+            min_streams = min(Streams)) %>%
+  arrange(desc(avg_streams))
+
+
+
+
+
+
