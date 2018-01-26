@@ -1,0 +1,362 @@
+---
+title: "Introduction to piping"
+output: html_document
+---
+
+## The pipe-operator
+
+What is it?
+>>> ADD
+
+
+Advantages:
+>>> ADD
+
+
+Quick tip:
+the shortcut in Rstudio is Ctlr+Shift+M.
+I personally did not find that an easy shortcut to quickly type blindly on either Azerty or Qwerty, so I changed it to Ctlr+P. You can change shortcuts via Rstudioo > Tools > Modify Keyboard Shortcuts.
+
+
+## The data
+
+Kickstarter 
+>>>> ADD
+
+```{r warning=FALSE, message=FALSE}
+library(tidyverse)
+#full data
+kickstarter <- readRDS("kickstarter.RDS")
+
+#random sample of 100 rows for the column exploration part
+kickstarter_sample <- sample_n(kickstarter, 100)
+
+glimpse(kickstarter)
+```
+
+
+## Pipe examples
+
+
+
+#### pipe examples ####
+#how many projects are successful versus other status's?
+kickstarter %>%
+  count(state)
+
+
+kickstarter %>%
+  count(state) %>%
+  arrange(desc(n))
+
+
+kickstarter %>%
+  group_by(state) %>%
+  summarise(n = n(), perc_successful = n/nrow(.)) %>%
+  arrange(desc(n))
+
+
+kickstarter %>%
+  filter(main_category == "Technology") %>%
+  group_by(state) %>%
+  summarise(n = n(), percent = n/nrow(.)) %>%
+  arrange(desc(n))
+
+
+kickstarter %>%
+  group_by(main_category) %>%
+  summarise(perc_successful = mean(state == "successful")) %>%
+  arrange(desc(perc_successful))
+
+kickstarter %>%
+  group_by(main_category) %>%
+  summarise(n = n(),
+            perc_successful = mean(state == "successful"),
+            avg_backers = mean(backers),
+            avg_pledged = mean(pledged)) %>%
+  arrange(desc(perc_successful))
+
+
+
+## Column selection 
+
+The below section
+>>> blablabla
+
+
+
+### Selecting existing columns
+>>> Note: To make the output of the column selection more visible, I added a glimpse statement at the end. In your code you obviously do not have to do this. 
+
+
+**Selecting columns by their full name**
+To select a few columns just add their names in the select statement. The order in which you script them, will determine the order in which they appear in the output - unless you create summary functions later on.
+```{r}
+#adding selected columns
+kickstarter_sample %>%
+  select(main_category, category, name, state)
+```
+
+If want to add a lot of columns, it can save a lot of space to have a good look at your data and see whether you can't get to your selection by using chunks, deselecting or even deselect a column and re-add it straight after. 
+
+To add a chunk of columns use the `start_col:end_col` syntax:
+```{r}
+#selecting chunks of columns
+kickstarter_sample %>%
+  select(name:main_category, currency:pledged, backers)
+```
+
+An alternative is to deselect columns by adding a minus sign in front of the column name. You can also deselect chunks of columns. It's even possible to deselect a whole chunk, and then re-add a column again (as long as it is in the same select statement)
+```{r}
+#deselecting one column (ID), deselecting all columns from date_launched until the end, but re-adding some columns from that large chunk.
+kickstarter_sample %>% 
+  select(-ID, -(date_launched:country), currency:pledged)
+```
+
+
+**Selecting columns based on partial names**
+If you have a lot of columns with a similar structure you can use partial matching by adding `starts_with()`, `ends_with()` or `contains()` in your select statement depending on how you want to match columns.
+  
+In this particular dataframe it does not make a ton of sense to do this, but this would be the syntax:
+
+```{r}
+#selecting based on partial matches
+kickstarter_sample %>%
+  select(contains("category"), starts_with("date"), ends_with("e")) 
+```
+
+
+
+**Selecting columns based on regex**
+The previous helper functions work with exact pattern matches. If you have similar patterns that are not entirely the same you can use any regular expression inside `matches()`.  
+The below example code will add any columns where you have 'a' followed by any letter, then an 'e' but to exclude the date columns no 'd' can be present in front of the 'a'.  
+
+```{r}
+#selecting based on regex
+kickstarter_sample %>%
+  select(matches("[^d]a.e"))
+```
+
+
+**Selecting columns by their data type**
+The `select_if` function allows you to 
+
+```{r}
+#select all string columns
+kickstarter_sample %>%
+  select_if(is.character)
+```
+
+
+
+#select based on type of column
+#select if
+kickstarter_sample %>%
+  select_if(is.character)
+
+
+
+#### MAKING NEW COLUMNS ####
+
+#pasting together
+#opposite is separate
+kickstarter_sample %>%
+  unite(goal_currency, currency, goal, sep=" ") %>%
+  select(name, goal_currency)
+
+#from calculations
+kickstarter_sample %>%
+  select(name, pledged, goal) %>%
+  mutate(delta_pledged_goal = pledged - goal)
+
+#regex
+kickstarter_sample %>%
+  mutate(name_first_word = str_extract(name, pattern = "^\\w+")) %>%
+  select(name, name_first_word)
+
+
+
+**Renaming a column**
+If you are doing a select statement anyways, you can rename straight in the `select` function. 
+```{r}
+kickstarter_sample %>%
+  select(main_category, category, project = name, status = state)
+```
+  
+If you are not selecting any columns, you can rename by adding a 'rename' statement.
+```{r}
+kickstarter_sample %>% 
+  rename(project = name, status = state, 
+         launch_date = date_launched, deadline = date_deadline)
+```
+
+
+
+
+#### COLUMNS FROM OTHER TABLES ####
+country_info <- read_csv("data/country_codes.csv")
+glimpse(country_info)
+
+#separating columns
+country_info <- country_info %>%
+  separate(ISO_CODES, into = c("code_alpha2", "code_alpha3"), sep = " / ")
+
+#joining column data
+kickstarter %>%
+  select(project = name, state, country) %>%
+  left_join(country_info, by = c("country" = "code_alpha2"))
+
+
+
+
+
+#### ROWS ####
+
+
+#arranging rows
+kickstarter %>%
+  select(main_category, category, project = name, backers) %>%
+  arrange(desc(backers))
+
+
+
+#filtering numeric rows
+kickstarter %>%
+  filter(goal < 1000) %>%
+  select(name, goal)
+
+kickstarter %>%
+  #filter(goal <= 1000, goal >= 500) %>%
+  filter(between(goal, 500, 1000)) %>%
+  select(name, goal)
+
+
+#filtering character rows
+kickstarter %>%
+  filter(state == "successful") %>%
+  count(state)
+
+
+kickstarter %>%
+  filter(state %in% c("successful", "failed")) %>%
+  count(state)
+
+
+kickstarter %>%
+  filter(state != "undefined") %>%
+  count(state) %>%
+  arrange(desc(n))
+
+#AND clause in filter
+kickstarter %>%
+  filter(country == "BE", goal > 200000)
+
+#AND and OR clause
+kickstarter %>%
+  filter(country == "BE", (state == "successful" | goal > 1000000))
+
+
+
+
+
+#regex
+kickstarter %>%
+  filter(grepl(pattern=" cats? ", name)) %>%
+  select(name, state)
+
+#or with stringr
+kickstarter %>%
+  #ilter(grepl(pattern=" cats? ", name)) %>%
+  filter(str_detect(name, pattern=" cats? ")) %>%
+  select(name, state)
+
+kickstarter %>%
+  filter(str_detect(str_to_lower(name), pattern=" cats? ")) %>%
+  select(name, state)
+
+#word might be in multiple columns
+kickstarter %>%
+  select(name, contains("category")) %>%
+  filter_all(any_vars(str_detect(., pattern = "fashion")))
+
+
+#advanced filtering
+kickstarter %>%
+  select(project = name, goal, pledged) %>%
+  filter_all(any_vars(.<5000))
+
+kickstarter %>%
+  select(project = name, goal, pledged) %>%
+  filter_all(any_vars(.<5000)) %>%
+  arrange(goal)
+
+kickstarter %>%
+  select(name, goal, pledged) %>%
+  filter_if(is.numeric, all_vars(.>1000000)) %>%
+  mutate(goal = goal/1000000, pledged = pledged/1000000) %>%
+  rename(goal_million = goal, pledged_million = pledged)
+  
+  
+  
+  
+#### miscellaneous ####
+
+#what different categories are there? 
+kickstarter %>%
+  group_by(main_category) %>%
+  arrange %>%
+  pull(main_category)
+
+#or pull out a mean as a vector, rather than a tibble of 1x1
+kickstarter %>%
+  filter(state == "successful", country=="BE") %>%
+  summarise(mean(pledged)) %>%
+  pull()
+
+
+#knitr::kable
+kickstarter %>%
+  group_by(main_category) %>%
+  summarise(n = n(),
+            perc_successful = mean(state == "successful"),
+            avg_backers = mean(backers),
+            avg_pledged = mean(pledged)) %>%
+  arrange(desc(perc_successful)) %>%
+  knitr::kable()
+
+
+
+#add print(n=nrow(.))
+### in some tibble versions only 10 rows are printed. 
+### if you want to force printing all rows, use:
+
+
+
+print(n=nrow(.))
+
+
+
+#### other uses of piping ####
+
+#webscraping
+library(xml2)
+library(rvest)
+
+read_html("https://www.relisten.be/playlists/radio1/01-01-2018.html") %>%
+  html_nodes(css = ".media-body > h4 > span") %>%
+  html_text()
+
+
+
+#modeling: purrr and broom
+library(tidyverse)
+library(broom)
+
+mtcars %>%
+  nest(-cyl) %>%
+  mutate(model = map(data, ~lm(mpg ~ wt, data = .))) %>%
+  mutate(tidied = map(model, tidy)) %>%
+  unnest(tidied)
+
+
+##many many more
