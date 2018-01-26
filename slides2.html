@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Presentation Ninja</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Yihui Xie" />
+    <link href="libs/remark-css-0.0.1/example.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Presentation Ninja
+## ⚔<br/>with xaringan
+### Yihui Xie
+### 2016/12/12
+
+---
+
+
+
+## What is piping?
+
+When you want to wrangle a large dataframe, you have a few options
+
+- 1. Nest a lot of functions
+  
+  
+  
+
+
+```r
+pizza &lt;- take_out(put_in(dress_with(dress_with
+        (dress_with(pie, sauce), oil), cheese), oven), oven)
+```
+
+---
+
+## What is piping?
+
+When you want to wrangle a large dataframe, you have a few options
+
+1. Nest a lot of functions
+1. Create a lot of temporary objects 
+  
+  
+
+
+```r
+pie_tmp &lt;- dress_with(pie, sauce)
+pie_tmp &lt;- dress_with(pie_tmp, oil)
+pie_tmp &lt;- dress_with(pie_tmp, cheese)
+pie_tmp &lt;- put_in(pie_tmp, oven)
+pizza &lt;- take_out(pie_tmp, oven)
+```
+
+
+---
+
+## What is piping?
+
+When you want to wrangle a large dataframe, you have a few options
+
+1. Nest a lot of functions
+2. Create a lot of temporary variables
+3. Use pipes  
+  
+
+
+```r
+pizza &lt;- pie %&gt;% 
+  dress_with(sauce) %&gt;% 
+  dress_with(oil) %&gt;% 
+  dress_with(break(cheese)) %&gt;% 
+  put_in(oven) %&gt;%
+  take_out(oven)
+```
+
+
+---
+
+## What is piping?
+
+When use the pipe-operator you build a chain of operations:
+
+
+```r
+dataframe %&gt;% 
+  function() %&gt;% 
+  function(args) %&gt;% 
+  function(args)
+```
+  
+&lt;br&gt;  
+**Advantages of piping**
+- structuring sequences of data operations left-to-right, making it more readable for humans
+- avoiding nested function calls,
+- minimizing the need for local variables 
+- making it easy to add steps anywhere in the sequence of operations
+- making it easy to stepwise explore someone elses code
+---
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {window.dispatchEvent(new Event('resize'));});
+(function() {var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler"); if (!r) return; s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }"; d.head.appendChild(s);})();</script>
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  }
+});
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
