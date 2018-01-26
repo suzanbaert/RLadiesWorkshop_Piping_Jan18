@@ -15,7 +15,7 @@ output:
 
 When you want to wrangle a large dataframe, you have a few options
 
-- 1. Nest a lot of functions
+1. Nest a lot of functions
   
   
   

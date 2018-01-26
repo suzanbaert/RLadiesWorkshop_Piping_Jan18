@@ -1,21 +1,23 @@
 library(tidyverse)
 
-# kickstarter_md <- read_csv("data/kickstarter_data_2018.csv")
+# kickstarter <- read_csv("data/kickstarter_data_2018.csv")
 # 
-# kickstarter<- kickstarter_md %>%
-#   rename(date_lauched = launched, date_ended = deadline)
-# 
-# saveRDS(kickstarter, "kickstarter.RDS")
+# kickstarter %>% 
+#   select(ID, name, main_category, category,
+#          date_launched = launched, date_deadline = deadline, 
+#          currency, goal, pledged, state, backers, country) %>%
+#   saveRDS("kickstarter.RDS")
 
 
----
-  
 kickstarter <- readRDS("kickstarter.RDS")
 
-glimpse(kickstarter)
+
 #random sample of 100 rows for column exploration
 kickstarter_sample <- kickstarter %>%
   sample_n(100)
+
+glimpse(kickstarter)
+
 
 #### pipe examples ####
 #how many projects are successful versus other status's?
@@ -250,18 +252,25 @@ kickstarter %>%
 
 
 #add print(n=nrow(.))
+### in some tibble versions only 10 rows are printed. 
+### if you want to force printing all rows, use:
 
 
-#other uses of piping
+
+print(n=nrow(.))
+
+
+
+#### other uses of piping ####
 
 #webscraping
-
 library(xml2)
 library(rvest)
 
 read_html("https://www.relisten.be/playlists/radio1/01-01-2018.html") %>%
   html_nodes(css = ".media-body > h4 > span") %>%
   html_text()
+
 
 
 #modeling: purrr and broom
