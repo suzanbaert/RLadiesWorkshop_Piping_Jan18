@@ -18,13 +18,13 @@ country_info <- read_csv("data/country_codes.csv")
 
 #COLUMNS SECTION ####
 
-#selecting columns
+#selecting columns: order of selection determines the order in the output
 kickstarter %>%
   select(name, category, main_category, state)
 
 #selecting a chunk of columns
 kickstarter %>%
-  select(name:main_category, state)
+  select(name:main_category, state, backers)
 
 #deselecting columns
 kickstarter %>%
@@ -34,6 +34,16 @@ kickstarter %>%
 kickstarter %>%
   select(contains("category"), starts_with("g"), ends_with("pledged"))
 
+#selecting based on regex
+kickstarter %>%
+  select(matches("^c.+y$"))
+
+#select if
+kickstarter %>%
+  select_if(is.character)
+
+
+
 #renaming columns
 kickstarter %>%
   rename(usd_pledged = `usd pledged`)
@@ -41,6 +51,11 @@ kickstarter %>%
 #changing the order of columns
 kickstarter %>%
   select(main_category, category, name, state)
+
+#just changing one: moving it to the back
+kickstarter %>%
+  select(name, main_category, category) %>%
+  select(-name, name) 
 
 #and renaming in a select
 kickstarter %>%
