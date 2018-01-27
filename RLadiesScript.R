@@ -1,12 +1,13 @@
 library(tidyverse)
 
-# kickstarter <- read_csv("data/kickstarter_data_2018.csv")
-# 
-# kickstarter %>% 
-#   select(ID, name, main_category, category,
-#          date_launched = launched, date_deadline = deadline, 
-#          currency, goal, pledged, state, backers, country) %>%
-#   saveRDS("kickstarter.RDS")
+kickstarter <- read_csv("data/kickstarter_data_2018.csv")
+
+kickstarter %>%
+  select(ID, name, main_category, category,
+         date_launched = launched, date_deadline = deadline,
+         currency, goal, pledged, state, backers, country) %>%
+  mutate(ID = as.character(ID)) %>%
+  saveRDS("kickstarter.RDS")
 
 
 kickstarter <- readRDS("kickstarter.RDS")
@@ -97,6 +98,22 @@ kickstarter_sample %>%
   select_if(is.character)
 
 
+kickstarter_sample %>%
+  select_if(is.numeric) %>%
+  select_if(~mean(., na.rm=TRUE)>500)
+
+
+kickstarter_sample %>%
+  select_if(~is.numeric(.) & mean(., na.rm=TRUE)>500)
+
+
+
+
+iris %>% 
+  select_if(~is.numeric(.) & n_distinct(.)>30)
+
+iris %>% 
+  select_if(~n_distinct(.)>30)
 
 #### MAKING NEW COLUMNS ####
 

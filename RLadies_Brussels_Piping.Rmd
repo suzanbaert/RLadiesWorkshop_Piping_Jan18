@@ -14,7 +14,7 @@ Advantages:
 
 
 Quick tip:
-the shortcut in Rstudio is Ctlr+Shift+M.
+There is a pre-programmed shortcut in Rstudio: Ctlr+Shift+M.
 I personally did not find that an easy shortcut to quickly type blindly on either Azerty or Qwerty, so I changed it to Ctlr+P. You can change shortcuts via Rstudioo > Tools > Modify Keyboard Shortcuts.
 
 
@@ -89,7 +89,7 @@ The below section
 >>> Note: To make the output of the column selection more visible, I added a glimpse statement at the end. In your code you obviously do not have to do this. 
 
 
-**Selecting columns by their full name**
+### **Selecting columns by their full name**
 To select a few columns just add their names in the select statement. The order in which you script them, will determine the order in which they appear in the output - unless you create summary functions later on.
 ```{r}
 #adding selected columns
@@ -103,10 +103,10 @@ To add a chunk of columns use the `start_col:end_col` syntax:
 ```{r}
 #selecting chunks of columns
 kickstarter_sample %>%
-  select(name:main_category, currency:pledged, backers)
+  select(name:main_category, currency:pledged)
 ```
 
-An alternative is to deselect columns by adding a minus sign in front of the column name. You can also deselect chunks of columns. It's even possible to deselect a whole chunk, and then re-add a column again (as long as it is in the same select statement)
+An alternative is to **deselect columns** by adding a minus sign in front of the column name. You can also deselect chunks of columns. It's even possible to deselect a whole chunk, and then re-add a column again (as long as it is in the same select statement)
 ```{r}
 #deselecting one column (ID), deselecting all columns from date_launched until the end, but re-adding some columns from that large chunk.
 kickstarter_sample %>% 
@@ -114,7 +114,7 @@ kickstarter_sample %>%
 ```
 
 
-**Selecting columns based on partial names**
+### **Selecting columns based on partial names**
 If you have a lot of columns with a similar structure you can use partial matching by adding `starts_with()`, `ends_with()` or `contains()` in your select statement depending on how you want to match columns.
   
 In this particular dataframe it does not make a ton of sense to do this, but this would be the syntax:
@@ -127,7 +127,7 @@ kickstarter_sample %>%
 
 
 
-**Selecting columns based on regex**
+### **Selecting columns based on regex**
 The previous helper functions work with exact pattern matches. If you have similar patterns that are not entirely the same you can use any regular expression inside `matches()`.  
 The below example code will add any columns where you have 'a' followed by any letter, then an 'e' but to exclude the date columns no 'd' can be present in front of the 'a'.  
 
@@ -138,21 +138,34 @@ kickstarter_sample %>%
 ```
 
 
-**Selecting columns by their data type**
-The `select_if` function allows you to 
+### **Selecting columns by their data type**
+The `select_if` function allows you to pass logical statements inside. For instance you can select all the string columns by passing `select_if(is.character)`. Similarly, you can add `is.numeric`, `is.integer`, `is.logical`.
 
 ```{r}
 #select all string columns
 kickstarter_sample %>%
-  select_if(is.character)
+  select_if(is.numeric)
+```
+  
+  
+  
+**Selecting columns by logical expressions**
+In fact, `select_if` allows you to select based on any logical expression, not just which datatype. It is possible to select all columns which average is above 500 for instance. To avoid errors you do have to also select numeric columns only, which you can do either upfront for easier syntax, or in the same line.  
+
+
+```{r eval=FALSE}
+kickstarter_sample %>%
+  select_if(is.numeric) %>%
+  select_if(~mean(., na.rm=TRUE) > 500)
 ```
 
+or shorter:
 
-
-#select based on type of column
-#select if
+```{r warning=FALSE}
 kickstarter_sample %>%
-  select_if(is.character)
+  select_if(~is.numeric(.) & mean(., na.rm=TRUE)>500)
+```
+
 
 
 
