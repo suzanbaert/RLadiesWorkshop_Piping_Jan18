@@ -3,30 +3,69 @@ title: "Introduction to piping"
 output: html_document
 ---
 
-## The pipe-operator
+# The pipe-operator
 
-What is it?
->>> ADD
+**What is it?**
+The pipe operator refers to this set of symbols: %>%
+It allows nesting of many manipulations inside one another.  
+  
+If you need to chain some operations to each other, you have some options:  
+1. You can nest a lot of functions:
+  
+``` {r eval=FALSE}
+pizza <- take_out(put_in(dress_with(dress_with
+        (dress_with(pie, sauce), oil), cheese), oven), oven)
+```
 
+2. You can create a lot of temporary objects 
 
-Advantages:
->>> ADD
+``` {r eval=FALSE}
+pie_tmp <- dress_with(pie, sauce)
+pie_tmp <- dress_with(pie_tmp, oil)
+pie_tmp <- dress_with(pie_tmp, cheese)
+pie_tmp <- put_in(pie_tmp, oven)
+pizza <- take_out(pie_tmp, oven)
 
+```
 
-Quick tip:
+or 3. you can use pipes: 
+
+``` {r eval=FALSE}
+pizza <- pie %>% 
+  dress_with(sauce) %>% 
+  dress_with(oil) %>% 
+  dress_with(break(cheese)) %>% 
+  put_in(oven) %>%
+  take_out(oven)
+
+```
+
+*Footnote: i found this example on a blog a while ago, but unfortunately i did not retain the bloginfo and google does not find it. So credit for this example goes to someone completely different, but I don't remember who... *
+<br>
+
+### **Advantages of using pipes:**
+
+- structuring sequences of data operations left-to-right, making it more readable for humans
+- avoiding nested function calls
+- minimizing the need for local variables 
+- making it easy to add steps anywhere in the sequence of operations if the output is not entirely what you desired
+- making it easy to stepwise explore someone elses code as you can highlight step by step and run it.
+<br>
+
+### **Quick tip:**
 There is a pre-programmed shortcut in Rstudio: Ctlr+Shift+M.
-I personally did not find that an easy shortcut to quickly type blindly on either Azerty or Qwerty, so I changed it to Ctlr+P. You can change shortcuts via Rstudioo > Tools > Modify Keyboard Shortcuts.
+I personally did not find that an easy shortcut to type blindly on either Azerty or Qwerty keyboards, so I changed it to Ctlr+P. You can change shortcuts via Rstudioo > Tools > Modify Keyboard Shortcuts.
+<br><br>
 
+# The data
 
-## The data
-
-Kickstarter 
->>>> ADD
+Kickstarter is a crowdfunding platform which allows creatives to gather money to complete a project. Project creators have to choose a deadline and a minimum funding goal.  
+The dataset is coming from kaggle: https://www.kaggle.com/kemical/kickstarter-projects
 
 ```{r warning=FALSE, message=FALSE}
 library(tidyverse)
 #full data
-kickstarter <- readRDS("kickstarter.RDS")
+kickstarter <- readRDS("data/kickstarter.RDS")
 
 #random sample of 100 rows for the column exploration part
 kickstarter_sample <- sample_n(kickstarter, 100)
@@ -35,39 +74,9 @@ glimpse(kickstarter)
 ```
 
 
-## Pipe examples
+## Pipe example:
 
-
-
-#### pipe examples ####
-#how many projects are successful versus other status's?
-kickstarter %>%
-  count(state)
-
-
-kickstarter %>%
-  count(state) %>%
-  arrange(desc(n))
-
-
-kickstarter %>%
-  group_by(state) %>%
-  summarise(n = n(), perc_successful = n/nrow(.)) %>%
-  arrange(desc(n))
-
-
-kickstarter %>%
-  filter(main_category == "Technology") %>%
-  group_by(state) %>%
-  summarise(n = n(), percent = n/nrow(.)) %>%
-  arrange(desc(n))
-
-
-kickstarter %>%
-  group_by(main_category) %>%
-  summarise(perc_successful = mean(state == "successful")) %>%
-  arrange(desc(perc_successful))
-
+```{r}
 kickstarter %>%
   group_by(main_category) %>%
   summarise(n = n(),
@@ -75,18 +84,47 @@ kickstarter %>%
             avg_backers = mean(backers),
             avg_pledged = mean(pledged)) %>%
   arrange(desc(perc_successful))
+```
+
+<br><br>
+
+
+# Column selection 
+
+In the below section we talk how to order, rename, select and manipulate the columns which you can use in your pipelines. The below are often not complete pipes, as they are mainly intended to show the column features available.  
+In some cases I have added a `glimpse()` statement to allow you to see in an instant which columns are present in the output without scrolling through a data table.
+<br>
+
+## **Re-ordering columns**
+You can use the `select()` function (see below) to re-order columns. The order in which you select them will determine the final order.  
+If you are re-orderin many columns, you can use the `everything()` which will add all the remaining columns and save a lot of typing.
+```{r}
+kickstarter_sample %>%
+  select(main_category, category, everything()) %>%
+  glimpse
+```
+<br>
+
+
+## **Renaming a column**
+If you are doing a select statement anyways, you can rename straight in the `select` function. 
+```{r}
+kickstarter_sample %>%
+  select(main_category, category, project = name, status = state)
+```
+  
+If you want to retain all columns, you can rename by adding a 'rename' statement.
+```{r}
+kickstarter_sample %>% 
+  rename(project = name, status = state, 
+         launch_date = date_launched, deadline = date_deadline)
+```
+<br>
 
 
 
-## Column selection 
 
-The below section
->>> blablabla
-
-
-
-### Selecting existing columns
->>> Note: To make the output of the column selection more visible, I added a glimpse statement at the end. In your code you obviously do not have to do this. 
+## **Selecting columns**
 
 
 ### **Selecting columns by their full name**
@@ -112,6 +150,9 @@ An alternative is to **deselect columns** by adding a minus sign in front of the
 kickstarter_sample %>% 
   select(-ID, -(date_launched:country), currency:pledged)
 ```
+<br>
+
+
 
 
 ### **Selecting columns based on partial names**
@@ -124,6 +165,9 @@ In this particular dataframe it does not make a ton of sense to do this, but thi
 kickstarter_sample %>%
   select(contains("category"), starts_with("date"), ends_with("e")) 
 ```
+<br>
+
+
 
 
 
@@ -136,22 +180,32 @@ The below example code will add any columns where you have 'a' followed by any 
 kickstarter_sample %>%
   select(matches("[^d]a.e"))
 ```
+<br>
+
+
 
 
 ### **Selecting columns by their data type**
-The `select_if` function allows you to pass logical statements inside. For instance you can select all the string columns by passing `select_if(is.character)`. Similarly, you can add `is.numeric`, `is.integer`, `is.logical`.
+The `select_if` function allows you to pass functions which return logical statements inside. For instance you can select all the string columns by passing `select_if(is.character)`. Similarly, you can add `is.numeric`, `is.integer`, `is.double`, `is.logical`, `is.factor`.
 
 ```{r}
 #select all string columns
 kickstarter_sample %>%
   select_if(is.numeric)
 ```
-  
-  
-  
-**Selecting columns by logical expressions**
-In fact, `select_if` allows you to select based on any logical expression, not just which datatype. It is possible to select all columns which average is above 500 for instance. To avoid errors you do have to also select numeric columns only, which you can do either upfront for easier syntax, or in the same line.  
 
+You can also select the negation but in this case you will need to add a tilde to ensure that you still pass a function to `select_if`.
+
+```{r}
+kickstarter_sample %>%
+  select_if(~!is.numeric(.))
+```
+<br>
+  
+  
+### **Selecting columns by logical expressions**
+In fact, `select_if` allows you to select based on any logical function, not just based on data type. It is possible to select all columns which average is above 500 for instance. To avoid errors you do have to also select numeric columns only, which you can do either upfront for easier syntax, or in the same line.  
+Similarly `mean > 500` is not a function in itself, so you will need to add a tilde upfront to turn the statement into a function.  
 
 ```{r eval=FALSE}
 kickstarter_sample %>%
@@ -166,210 +220,351 @@ kickstarter_sample %>%
   select_if(~is.numeric(.) & mean(., na.rm=TRUE)>500)
 ```
 
+One of the useful functions for `select_if` is `n_distinct()`, which counts the amount of distinct values that can be found in a column.  
+To return the columns that have less than 20 distinct answers for instance you pass  `~n_distinct(.) < 20` within the select_if statement. Given that in itself n_distinct(.) < 20 is not a function, you will need to put a tilde in front. 
 
-
-
-#### MAKING NEW COLUMNS ####
-
-#pasting together
-#opposite is separate
+```{r}
 kickstarter_sample %>%
-  unite(goal_currency, currency, goal, sep=" ") %>%
-  select(name, goal_currency)
+  select_if(~n_distinct(.) < 20)
+```
 
+
+
+
+
+
+
+## **Adding new columns**
+
+You can make new columns with the `mutate`function. This new column can take many forms, it can be a calculation based on values in other columns:
+
+```{r}
 #from calculations
 kickstarter_sample %>%
   select(name, pledged, goal) %>%
   mutate(delta_pledged_goal = pledged - goal)
+```
 
-#regex
+
+It can be made with functions such as average, median, max, min, ...  
+You can add multiple new columns in one `mutate` operation.
+
+```{r}
+kickstarter_sample %>%
+  select(pledged, goal) %>%
+  mutate(pledge_delta_vs_average = pledged - mean(pledged),
+         goal_delta_vs_max = goal - max(goal))
+```
+
+Adding any regex operation inside a pipe is also possible. You can use string's `str_extract()` function in combation with any character or regex patterns.
+
+```{r}
+#regex-based mutation
 kickstarter_sample %>%
   mutate(name_first_word = str_extract(name, pattern = "^\\w+")) %>%
   select(name, name_first_word)
-
-
-
-**Renaming a column**
-If you are doing a select statement anyways, you can rename straight in the `select` function. 
-```{r}
-kickstarter_sample %>%
-  select(main_category, category, project = name, status = state)
 ```
-  
-If you are not selecting any columns, you can rename by adding a 'rename' statement.
+<br>
+
+
+
+
+## **Merging and unmerging columns**
+
+You can paste two columns together via tidyr's `unite()` function. You specify the new column name, and then the columns to be united, and lastly what seperator you want to use. 
+
 ```{r}
-kickstarter_sample %>% 
-  rename(project = name, status = state, 
-         launch_date = date_launched, deadline = date_deadline)
+(ks_merge <- kickstarter_sample %>%
+  unite(goal_currency, currency, goal, sep=" ") %>%
+  select(name, goal_currency))
+```
+
+
+You can unmerge any columns by using tidyr's `separate())` function. To do this, you have to specify the column to be splitted, followed by the new column names, and which seperator it has to look for. 
+
+```{r}
+ks_merge %>%
+  separate(goal_currency, into = c("goal", "currency"), sep=" ")
 ```
 
 
 
+## **Adding columns from other tables**
 
-#### COLUMNS FROM OTHER TABLES ####
+If I want to add information from another type, you can use the joining functions from dplyr. The kickstarter tables only contains a country_code. If i want to add a full country name, or I want to do analysis on specific country data, I can add data from another table.  
+Take for instance this country_info data: 
+
+```{r}
 country_info <- read_csv("data/country_codes.csv")
-glimpse(country_info)
-
-#separating columns
 country_info <- country_info %>%
-  separate(ISO_CODES, into = c("code_alpha2", "code_alpha3"), sep = " / ")
+  separate(ISO_CODES, into = c("code_alpha2", "code_alpha3"), sep = " / ") %>%
+  glimpse
+```
 
+
+If I want to merge this info in my kickstarter data, I can do a left_join based on the country_code column:
+
+```{r}
 #joining column data
 kickstarter %>%
   select(project = name, state, country) %>%
   left_join(country_info, by = c("country" = "code_alpha2"))
+```
 
 
 
 
 
-#### ROWS ####
 
 
-#arranging rows
+
+
+## **Miscellaneous**
+
+Some dataframes have rownames that are not actually a column in itself, like the mtcars dataset: 
+
+```{r}
+mtcars %>%
+  head
+```
+
+
+If you want this column to be an actual column, you can use the `rownames_to_column()` function, and specify a new column name.
+
+```{r}
+mtcars %>%
+  rownames_to_column("car_model") %>%
+  head
+```
+
+
+
+
+
+# Rows
+
+
+## **Arranging rows**
+In many cases you do not want to show the dataset as it is, but want to arrange based on a certain column. The function arrange allows you to order a column alphabetically (if the column is a character column), or based on small-large with the `arrange()` function.  
+If you want descending order, add `arrange(desc())` to your pipeline. The below code shows the 5 projects with the highest amount of backers.
+
+```{r}
 kickstarter %>%
   select(main_category, category, project = name, backers) %>%
-  arrange(desc(backers))
+  arrange(desc(backers)) %>%
+  top_n(5)
+```
 
 
+## **Selecting rows**
 
-#filtering numeric rows
+### **Filtering based on numerical columns**
+To select certain rows, you use the `filter()` function. You can pass a logical statement to filter:  
+To filter all projects where the goal was higher than 1000:
+```{r}
 kickstarter %>%
   filter(goal < 1000) %>%
   select(name, goal)
+```
 
+For numeric columns you can also pass arange, either by using two logical statments:`filter(goal <= 1000, goal >= 500)` or by using the `between` option:
+
+```{r}
 kickstarter %>%
-  #filter(goal <= 1000, goal >= 500) %>%
   filter(between(goal, 500, 1000)) %>%
   select(name, goal)
+```
+<br>
 
 
-#filtering character rows
+
+### **Filtering based on string columns**
+
+You can also filter character columns based on a column value. The below code keeps all projects that were successful. The final `count(state)` collapses all retained rows and counts what is left in the output table by state.
+
+```{r}
 kickstarter %>%
   filter(state == "successful") %>%
   count(state)
+```
 
 
+If you want to filter out a few character values, you can use the `%in%` operator:
+
+```{r}
 kickstarter %>%
   filter(state %in% c("successful", "failed")) %>%
-  count(state)
+  count(state) %>%
+  arrange(desc(n))
+```
 
 
+You can use any other logical statement. If you would use `filter(state > n)` the output table would only show any values of state that are alphabetically after the letter n.  
+Or you can use the `!=` operator to deselect any values:
+
+```{r}
 kickstarter %>%
   filter(state != "undefined") %>%
   count(state) %>%
   arrange(desc(n))
+```
+<br>
 
+
+
+### **Regex based filtering**
+
+The above string operators only work on full matches. If you want to filter based on partial matches, you can use the regex experssions inside a filter function. You can use base R's `grepl` function, or stringr's `str_detect()`.
+
+```{r}
+kickstarter %>%
+  filter(str_detect(name, pattern=" cats? ")) %>%
+  #alternative with grepl: filter(grepl(pattern=" cats? ", name)) %>%
+  select(name, state)
+```
+
+In many cases you will need to take into account that R is case sensitive. By just checking for 'cats', we missed many projects. You can add a `tolower()` call inside `str_detect()` to avoid these issues.
+
+```{r}
+kickstarter %>%
+  filter(str_detect(tolower(name), pattern = " cats? ")) %>%
+  #grepl alternative: filter(grepl(pattern=" cats? ", name, ignore.case=TRUE)) %>%
+  select(name, state)
+```
+
+<br>
+
+
+
+### **Filtering based on multiple conditions**
+
+You can add multiple conditions inside one filter statement. By default adding multiple conditions with a comma, means that both statments have to be true for the row to be retained
+
+```{r}
 #AND clause in filter
 kickstarter %>%
   filter(country == "BE", goal > 200000)
+```
 
+
+If you want a row to be retained in one OR the other condition, you have to add the `|` operator.  
+You can combine multiple and, or and not conditions: 
+
+```{r}
 #AND and OR clause
 kickstarter %>%
   filter(country == "BE", (state == "successful" | goal > 1000000))
+```
 
 
 
+## **Filtering across columns**
 
+If you are filtering across columns for the same values, `filter_all()` can save you some typing space.  
+Imagine we want to retain any projects that have the word "fashion" inside a category or inside its project name. We can do this by adding 3 conditions:
 
-#regex
-kickstarter %>%
-  filter(grepl(pattern=" cats? ", name)) %>%
-  select(name, state)
-
-#or with stringr
-kickstarter %>%
-  #ilter(grepl(pattern=" cats? ", name)) %>%
-  filter(str_detect(name, pattern=" cats? ")) %>%
-  select(name, state)
-
-kickstarter %>%
-  filter(str_detect(str_to_lower(name), pattern=" cats? ")) %>%
-  select(name, state)
-
-#word might be in multiple columns
+```{r}
 kickstarter %>%
   select(name, contains("category")) %>%
-  filter_all(any_vars(str_detect(., pattern = "fashion")))
+  filter(str_detect(tolower(name), pattern = "fashion") |
+         str_detect(tolower(category), pattern = "fashion") |
+         str_detect(tolower(main_category), pattern = "fashion"))
+```
 
 
-#advanced filtering
+This is a lot of typing and copy pasting though. An alternative is to use `filter_all()`:
+
+```{r}
 kickstarter %>%
-  select(project = name, goal, pledged) %>%
+  select(name, contains("category")) %>%
+  filter_all(any_vars(str_detect(tolower(.), pattern = "fashion"))) %>%
+  filter(main_category != "Fashion")
+```
+
+
+The `filter_all()` function can also be used with numericl input. To retain all rows where both goal and columns are below 5000 you can use `filter_all(all_vars())`:
+
+```{r}
+kickstarter %>%
+  select(goal, pledged) %>%
+  filter_all(all_vars(.<5000))
+```
+
+
+The OR-version of this statement is `filter_all(any_vars())`.  
+To retain any rows where either column is below 5000.
+```{r}
+kickstarter %>%
+  select(goal, pledged) %>%
   filter_all(any_vars(.<5000))
+```
 
-kickstarter %>%
-  select(project = name, goal, pledged) %>%
-  filter_all(any_vars(.<5000)) %>%
-  arrange(goal)
+The above solution does not always work well if you  have both character and numeric columns. In these cases it might be better to use `filter_if`:
 
+```{r}
 kickstarter %>%
   select(name, goal, pledged) %>%
-  filter_if(is.numeric, all_vars(.>1000000)) %>%
-  mutate(goal = goal/1000000, pledged = pledged/1000000) %>%
-  rename(goal_million = goal, pledged_million = pledged)
-  
-  
-  
-  
-#### miscellaneous ####
+  filter_if(is.numeric, all_vars(.>1000000))
+```
 
+<br><br>
+
+### Miscellaneous 
+
+If you want to get info in a vector, you can use the `pull()` function at the end. Imagine you want the mean value of a specific subgroup. If you just save the output it will be tibble of 1x1 rather than a vector.:
+```{r}
+kickstarter %>%
+  filter(state == "successful", country=="BE") %>%
+  summarise(mean(pledged))
+```
+
+By adding a `pull()` statement you will get a vector as outpt:
+
+```{r}
+kickstarter %>%
+  filter(state == "successful", country=="BE") %>%
+  summarise(mean(pledged)) %>%
+  pull()
+```
+
+You can also use pull on a longer vector:
+
+```{r}
 #what different categories are there? 
 kickstarter %>%
   group_by(main_category) %>%
   arrange %>%
   pull(main_category)
+```
 
-#or pull out a mean as a vector, rather than a tibble of 1x1
-kickstarter %>%
-  filter(state == "successful", country=="BE") %>%
-  summarise(mean(pledged)) %>%
-  pull()
+<br><br>
 
 
-#knitr::kable
-kickstarter %>%
-  group_by(main_category) %>%
-  summarise(n = n(),
-            perc_successful = mean(state == "successful"),
-            avg_backers = mean(backers),
-            avg_pledged = mean(pledged)) %>%
-  arrange(desc(perc_successful)) %>%
-  knitr::kable()
+## You can use piping in many ways.
+Text analysis, graph plotting, ... all can work with pipes.
 
+You can scrape the web in pipes:
 
-
-#add print(n=nrow(.))
-### in some tibble versions only 10 rows are printed. 
-### if you want to force printing all rows, use:
-
-
-
-print(n=nrow(.))
-
-
-
-#### other uses of piping ####
-
+```{r eval=FALSE}
 #webscraping
 library(xml2)
 library(rvest)
 
-read_html("https://www.relisten.be/playlists/radio1/01-01-2018.html") %>%
+read_html(<insert your html>) %>%
   html_nodes(css = ".media-body > h4 > span") %>%
   html_text()
+```
 
-
-
-#modeling: purrr and broom
-library(tidyverse)
-library(broom)
-
+Or build a few models in one go:
+```{r}
 mtcars %>%
   nest(-cyl) %>%
   mutate(model = map(data, ~lm(mpg ~ wt, data = .))) %>%
   mutate(tidied = map(model, tidy)) %>%
   unnest(tidied)
+```
 
+<br><br>
 
-##many many more
+And many many more...  
+Happy piping!

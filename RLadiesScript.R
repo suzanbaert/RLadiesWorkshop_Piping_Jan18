@@ -58,6 +58,8 @@ kickstarter %>%
   arrange(desc(perc_successful))
 
 
+k
+
 
 #### COLUMN SELECTIONS ####
 
@@ -107,13 +109,10 @@ kickstarter_sample %>%
   select_if(~is.numeric(.) & mean(., na.rm=TRUE)>500)
 
 
+kickstarter_sample %>%
+  select_if(~n_distinct(.) < 20)
 
 
-iris %>% 
-  select_if(~is.numeric(.) & n_distinct(.)>30)
-
-iris %>% 
-  select_if(~n_distinct(.)>30)
 
 #### MAKING NEW COLUMNS ####
 
@@ -133,6 +132,9 @@ kickstarter_sample %>%
   mutate(name_first_word = str_extract(name, pattern = "^\\w+")) %>%
   select(name, name_first_word)
 
+kickstarter_sample %>%
+  mutate(name_first_word = grep(pattern = "^\\w+", name)) %>%
+  select(name, name_first_word)
 
 
 #### COLUMNS FROM OTHER TABLES ####
