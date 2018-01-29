@@ -1,4 +1,5 @@
 library(tidyverse)
+library(lubridate)
 
 kickstarter <- read_csv("data/kickstarter_data_2018.csv")
 
@@ -58,7 +59,7 @@ kickstarter %>%
   arrange(desc(perc_successful))
 
 
-k
+
 
 
 #### COLUMN SELECTIONS ####
@@ -137,6 +138,95 @@ kickstarter_sample %>%
   select(name, name_first_word)
 
 
+### RECODING
+kickstarter %>%
+  mutate(new_state = recode(state, 
+                            "successful" = "reached_target",
+                            "failed" = "failed_target",
+                            .default = "other")) %>%
+  count(new_state)
+
+
+
+#ifelse
+kickstarter_sample %>%
+  select(pledged, goal) %>%
+  mutate(surplus = pledged - goal,
+         surplus = ifelse(surplus >=0, surplus, 0)) %>%
+  slice(85:95)
+
+
+#can use ifelse to make discrete values out of numeric ones
+kickstarter_sample %>%
+  mutate(goal_discrete = ifelse(goal > 50000, "high", "low")) %>%
+  select(goal, goal_discrete)
+
+#if more than one level: rather than  nested ifelse, use case_when
+#♠arguments are evaluated in order, so only the rows where the first statement is not true will continue to the nxt
+#case_when
+kickstarter %>%
+  mutate(goal_discrete = case_when(
+    goal > 100000 ~ "very high",
+    goal > 10000 ~ "high",
+    goal > 1000 ~ "medium",
+    TRUE ~ "low")) %>%
+  mutate(goal_discrete = forcats::fct_relevel(goal_discrete, 
+                                              "very high", "high", "medium", "low")) %>%
+  count(goal_discrete) 
+
+
+kickstarter %>%
+  mutate(response_type = case_when(
+    state == "successful" ~ "successful",
+    state == "failed" & backers > 50 ~ "failed_but_high_interest",
+    state == "failed" ~ "failed",
+    TRUE ~"other")) %>%
+  mutate(response_type = forcats::fct_relevel(response_type, 
+                                              "successful", "failed_but_high_interest", 
+                                              "failed", "other")) %>%
+  count(response_type)
+
+
+kickstarter %>%
+  mutate(strange_column = case_when(
+    country == "BE" ~ "BE_project",
+    main_category == "Technology" & state == "successful" ~ "Successful_techn_project",
+    year(as.Date(date_launched)) < 2015 ~ "archived_project")) %>%
+  count(strange_column)
+  
+
+
+
+#mutating multiple columns
+
+kickstarter %>% 
+  mutate_all(as.character)
+
+#mutate_if
+kickstarter %>%
+  select(-ID, -name) %>%
+  mutate_if(is.character, as.factor) %>%
+  glimpse
+
+#turn POSIXt date columns into years
+kickstarter %>%
+  mutate_if(lubridate::is.POSIXt, ~year(as.Date(.)))
+
+
+#mutate_if: change all celsius degrees to fahrenheit
+tempdf <- data.frame(city = c("Brussels", "London", "Paris", "Amsterdam"),
+                     fake_temp_jan = c(5,3,2,6),
+                     fake_temp_jun = c(21, 18, 25, 20))
+tempdf %>%
+  mutate_if(is.numeric, ~(.*9/5 + 32))
+
+#same with mutate_at
+kickstarter %>%
+  mutate_at(vars(date_launched, date_deadline), ~(year(as.Date(.))))
+
+
+
+
 #### COLUMNS FROM OTHER TABLES ####
 country_info <- read_csv("data/country_codes.csv")
 glimpse(country_info)
@@ -203,6 +293,7 @@ kickstarter %>%
 
 
 
+
 #regex
 kickstarter %>%
   filter(grepl(pattern=" cats? ", name)) %>%
@@ -222,6 +313,12 @@ kickstarter %>%
 kickstarter %>%
   select(name, contains("category")) %>%
   filter_all(any_vars(str_detect(., pattern = "fashion")))
+
+
+
+
+
+
 
 
 #advanced filtering
