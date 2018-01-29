@@ -122,42 +122,43 @@ $(document).ready(function () {
 </div>
 
 
-<div id="the-pipe-operator" class="section level1">
-<h1>The pipe-operator</h1>
-<p><strong>What is it?</strong> The pipe operator refers to this set of symbols: %&gt;% It allows nesting of many manipulations inside one another.</p>
-<p>If you need to chain some operations to each other, you have some options:<br />
-1. You can nest a lot of functions:</p>
+<div id="what-is-the-pipe-operator" class="section level3">
+<h3><strong>What is the pipe-operator?</strong></h3>
+<p>The pipe operator refers to this set of symbols: %&gt;%<br />
+It allows nesting of many manipulations inside one another. It takes an object (a dataframe for instance), applies a function to it, and returns a new dataframe (in the form of a tibble), which you can again pipe into a new function.</p>
+<p>Chaining multiple functions after each other is something you will have to do frequently in analysis to explore your data, or the wrangle your data into shape.<br />
+If you need to chain some operations to each other, you have some options:</p>
+<ol style="list-style-type: decimal">
+<li>You can nest a lot of functions:</li>
+</ol>
 <pre class="r"><code>pizza &lt;- take_out(put_in(dress_with(dress_with
         (dress_with(pie, sauce), oil), cheese), oven), oven)</code></pre>
 <ol start="2" style="list-style-type: decimal">
-<li>You can create a lot of temporary objects</li>
+<li>You can create temporary objects</li>
 </ol>
 <pre class="r"><code>pie_tmp &lt;- dress_with(pie, sauce)
 pie_tmp &lt;- dress_with(pie_tmp, oil)
 pie_tmp &lt;- dress_with(pie_tmp, cheese)
 pie_tmp &lt;- put_in(pie_tmp, oven)
 pizza &lt;- take_out(pie_tmp, oven)</code></pre>
-<p>or 3. you can use pipes:</p>
+<ol start="3" style="list-style-type: decimal">
+<li>You can build a pipeline of operators using the pipe-operator:</li>
+</ol>
 <pre class="r"><code>pizza &lt;- pie %&gt;% 
   dress_with(sauce) %&gt;% 
   dress_with(oil) %&gt;% 
   dress_with(break(cheese)) %&gt;% 
   put_in(oven) %&gt;%
   take_out(oven)</code></pre>
-<p><em>Footnote: i found this example on a blog a while ago, but unfortunately i did not retain the bloginfo and google does not find it. So credit for this example goes to someone completely different, but I don’t remember who… </em> <br></p>
+<p><em>Note: i found this non-R example on a blog a while ago, but unfortunately i did not retain the bloginfo and google does not find it. So credit for this example goes to someone completely different, but I don’t remember who… </em> <br></p>
+</div>
 <div id="advantages-of-using-pipes" class="section level3">
 <h3><strong>Advantages of using pipes:</strong></h3>
-<ul>
-<li>structuring sequences of data operations left-to-right, making it more readable for humans</li>
-<li>avoiding nested function calls</li>
-<li>minimizing the need for local variables</li>
-<li>making it easy to add steps anywhere in the sequence of operations if the output is not entirely what you desired</li>
-<li>making it easy to stepwise explore someone elses code as you can highlight step by step and run it. <br></li>
-</ul>
-</div>
-<div id="quick-tip-there-is-a-pre-programmed-shortcut-in-rstudio-ctlrshiftm.-i-personally-did-not-find-that-an-easy-shortcut-to-type-blindly-on-either-azerty-or-qwerty-keyboards-so-i-changed-it-to-ctlrp.-you-can-change-shortcuts-via-rstudioo-tools-modify-keyboard-shortcuts." class="section level3">
-<h3>**Quick <a href="tip:**" class="uri">tip:**</a> There is a pre-programmed shortcut in Rstudio: Ctlr+Shift+M. I personally did not find that an easy shortcut to type blindly on either Azerty or Qwerty keyboards, so I changed it to Ctlr+P. You can change shortcuts via Rstudioo &gt; Tools &gt; Modify Keyboard Shortcuts. <br><br></h3>
-</div>
+<p>Using pipelines has some advantages: - Structuring sequences of data operations left-to-right, making it more readable for humans - Avoiding nested function calls - Minimizing the need for local variables - Making it easy to add steps anywhere in the sequence of operations if the output is not entirely what you desired - Making it easy to stepwise explore someone elses code as you can highlight step by step and run it.</p>
+<p>There are some watch-outs in using pipes inside functions and packages though. <br></p>
+<p><strong>Quick tip: </strong><br />
+There is a pre-programmed shortcut in Rstudio: Ctlr+Shift+M. I personally did not find that an easy shortcut to type blindly on either my Azerty or Qwerty keyboards, so I changed it to Ctlr+P. You can change shortcuts via Rstudio &gt; Tools &gt; Modify Keyboard Shortcuts. <br><br></p>
+<hr />
 </div>
 <div id="the-data" class="section level1">
 <h1>The data</h1>
@@ -185,207 +186,221 @@ glimpse(kickstarter)</code></pre>
 ## $ state         &lt;chr&gt; &quot;failed&quot;, &quot;failed&quot;, &quot;failed&quot;, &quot;failed&quot;, &quot;cancele...
 ## $ backers       &lt;int&gt; 0, 15, 3, 1, 14, 224, 16, 40, 58, 43, 0, 100, 0,...
 ## $ country       &lt;chr&gt; &quot;GB&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, ...</code></pre>
-<div id="pipe-example" class="section level2">
-<h2>Pipe example:</h2>
+<p><br></p>
+<p><strong>Pipe example:</strong></p>
+<p>Using a pipeline of functions I can reshape my data into a summary table of data. This table for instance shows the number of projects, the percentage of success project, average amount of backers and average amount of money pledged by category.</p>
 <pre class="r"><code>kickstarter %&gt;%
   group_by(main_category) %&gt;%
-  summarise(n = n(),
+  summarise(number_of_projects = n(),
             perc_successful = mean(state == &quot;successful&quot;),
             avg_backers = mean(backers),
             avg_pledged = mean(pledged)) %&gt;%
   arrange(desc(perc_successful))</code></pre>
 <pre><code>## # A tibble: 15 x 5
-##    main_category     n perc_successful avg_backers avg_pledged
-##    &lt;chr&gt;         &lt;int&gt;           &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;
-##  1 Dance          3768           0.620        42.8        3691
-##  2 Theater       10913           0.599        47.1        4097
-##  3 Comics        10819           0.540       135          6899
-##  4 Music         51918           0.466        52.2        3993
-##  5 Art           28153           0.409        42.2        3607
-##  6 Film &amp; Video  63585           0.372        66.0        6363
-##  7 Games         35231           0.355       322         21865
-##  8 Design        30070           0.351       241         27120
-##  9 Publishing    39874           0.308        56.0        3639
-## 10 Photography   10779           0.307        39.7        3665
-## 11 Food          24602           0.247        54.2        5340
-## 12 Fashion       22816           0.245        61.4        6549
-## 13 Crafts         8809           0.240        27.3        2016
-## 14 Journalism     4755           0.213        38.3        3218
-## 15 Technology    32569           0.198       164         22586</code></pre>
+##    main_category number_of_projec~ perc_successful avg_backers avg_pledged
+##    &lt;chr&gt;                     &lt;int&gt;           &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;
+##  1 Dance                      3768           0.620        42.8        3691
+##  2 Theater                   10913           0.599        47.1        4097
+##  3 Comics                    10819           0.540       135          6899
+##  4 Music                     51918           0.466        52.2        3993
+##  5 Art                       28153           0.409        42.2        3607
+##  6 Film &amp; Video              63585           0.372        66.0        6363
+##  7 Games                     35231           0.355       322         21865
+##  8 Design                    30070           0.351       241         27120
+##  9 Publishing                39874           0.308        56.0        3639
+## 10 Photography               10779           0.307        39.7        3665
+## 11 Food                      24602           0.247        54.2        5340
+## 12 Fashion                   22816           0.245        61.4        6549
+## 13 Crafts                     8809           0.240        27.3        2016
+## 14 Journalism                 4755           0.213        38.3        3218
+## 15 Technology                32569           0.198       164         22586</code></pre>
 <p><br><br></p>
+<hr />
 </div>
-</div>
-<div id="column-selection" class="section level1">
-<h1>Column selection</h1>
-<p>In the below section we talk how to order, rename, select and manipulate the columns which you can use in your pipelines. The below are often not complete pipes, as they are mainly intended to show the column features available.<br />
-In some cases I have added a <code>glimpse()</code> statement to allow you to see in an instant which columns are present in the output without scrolling through a data table. <br></p>
-<div id="re-ordering-columns" class="section level2">
-<h2><strong>Re-ordering columns</strong></h2>
-<p>You can use the <code>select()</code> function (see below) to re-order columns. The order in which you select them will determine the final order.<br />
-If you are re-orderin many columns, you can use the <code>everything()</code> which will add all the remaining columns and save a lot of typing.</p>
+<div id="selecting-and-manipulating-columns" class="section level1">
+<h1>Selecting and manipulating columns</h1>
+<p>In the below section we talk how to order, rename, select and manipulate the columns which you can use in your pipelines. The below examples are not complete pipes, as they are mainly intended to show the column features available.<br />
+In some cases I have added a <code>glimpse()</code> statement to allow you to see in an instant which columns are present in the output without scrolling through a data table.</p>
+<p><br></p>
+<div id="re-ordering-columns" class="section level3">
+<h3><strong>Re-ordering columns</strong></h3>
+<p>You can use the <code>select()</code> function (see below) to re-order columns. The order in which you select them will determine the final order.</p>
+<pre class="r"><code>kickstarter_sample %&gt;% 
+  select(main_category, category, goal, currency)</code></pre>
+<pre><code>## # A tibble: 100 x 4
+##    main_category category        goal currency
+##    &lt;chr&gt;         &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;   
+##  1 Games         Video Games    10000 USD     
+##  2 Film &amp; Video  Narrative Film 30000 USD     
+##  3 Art           Art            10000 USD     
+##  4 Crafts        Printing       15000 DKK     
+##  5 Comics        Comics          2000 USD     
+##  6 Publishing    Poetry          8000 USD     
+##  7 Games         Video Games     1501 USD     
+##  8 Food          Small Batch    25000 USD     
+##  9 Film &amp; Video  Action          1000 USD     
+## 10 Crafts        Crafts          5000 USD     
+## # ... with 90 more rows</code></pre>
+<p>If you have many columns and you want to bring just a few to the front, you can finish your select operation by using the <code>everything()</code> statement, which will add all the remaining columns and save a lot of typing.</p>
 <pre class="r"><code>kickstarter_sample %&gt;%
   select(main_category, category, everything()) %&gt;%
   glimpse</code></pre>
 <pre><code>## Observations: 100
 ## Variables: 12
-## $ main_category &lt;chr&gt; &quot;Games&quot;, &quot;Fashion&quot;, &quot;Film &amp; Video&quot;, &quot;Publishing&quot;...
-## $ category      &lt;chr&gt; &quot;Video Games&quot;, &quot;Apparel&quot;, &quot;Documentary&quot;, &quot;Publis...
-## $ ID            &lt;chr&gt; &quot;1959012580&quot;, &quot;453762915&quot;, &quot;1532390357&quot;, &quot;128064...
-## $ name          &lt;chr&gt; &quot;Pharaoh's Conclave&quot;, &quot;Hypnoticz&quot;, &quot;\&quot;The Pagean...
-## $ date_launched &lt;dttm&gt; 2015-12-19 19:36:35, 2015-09-29 02:13:54, 2013-...
-## $ date_deadline &lt;dttm&gt; 2016-01-08 19:36:35, 2015-10-29 01:13:54, 2013-...
-## $ currency      &lt;chr&gt; &quot;USD&quot;, &quot;USD&quot;, &quot;USD&quot;, &quot;USD&quot;, &quot;USD&quot;, &quot;SEK&quot;, &quot;USD&quot;,...
-## $ goal          &lt;dbl&gt; 6500, 63500, 1350, 2500, 3000, 35000, 15000, 200...
-## $ pledged       &lt;dbl&gt; 101.00, 2.00, 1495.00, 236.00, 250.00, 1960.00, ...
-## $ state         &lt;chr&gt; &quot;failed&quot;, &quot;failed&quot;, &quot;successful&quot;, &quot;failed&quot;, &quot;fai...
-## $ backers       &lt;int&gt; 2, 2, 26, 2, 7, 9, 1, 0, 191, 10, 17, 4, 7, 427,...
-## $ country       &lt;chr&gt; &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;SE&quot;, &quot;US&quot;, &quot;N,\&quot;0...</code></pre>
+## $ main_category &lt;chr&gt; &quot;Games&quot;, &quot;Film &amp; Video&quot;, &quot;Art&quot;, &quot;Crafts&quot;, &quot;Comic...
+## $ category      &lt;chr&gt; &quot;Video Games&quot;, &quot;Narrative Film&quot;, &quot;Art&quot;, &quot;Printin...
+## $ ID            &lt;chr&gt; &quot;928179407&quot;, &quot;2131450892&quot;, &quot;998668803&quot;, &quot;1048191...
+## $ name          &lt;chr&gt; &quot;Grimm: A Theatrical Tale&quot;, &quot;PRELUDE (Canceled)&quot;...
+## $ date_launched &lt;dttm&gt; 2017-07-03 03:41:11, 2011-08-04 06:37:10, 2013-...
+## $ date_deadline &lt;dttm&gt; 2017-08-02 03:41:11, 2011-10-03 06:37:10, 2013-...
+## $ currency      &lt;chr&gt; &quot;USD&quot;, &quot;USD&quot;, &quot;USD&quot;, &quot;DKK&quot;, &quot;USD&quot;, &quot;USD&quot;, &quot;USD&quot;,...
+## $ goal          &lt;dbl&gt; 10000, 30000, 10000, 15000, 2000, 8000, 1501, 25...
+## $ pledged       &lt;dbl&gt; 27.0, 2375.0, 12467.0, 600.0, 2496.0, 9355.0, 27...
+## $ state         &lt;chr&gt; &quot;failed&quot;, &quot;canceled&quot;, &quot;successful&quot;, &quot;canceled&quot;, ...
+## $ backers       &lt;int&gt; 3, 8, 165, 2, 48, 52, 73, 3, 2, 10, 1, 2, 69, 0,...
+## $ country       &lt;chr&gt; &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;DK&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, ...</code></pre>
 <p><br></p>
 </div>
-<div id="renaming-a-column" class="section level2">
-<h2><strong>Renaming a column</strong></h2>
+<div id="renaming-a-column" class="section level3">
+<h3><strong>Renaming a column</strong></h3>
 <p>If you are doing a select statement anyways, you can rename straight in the <code>select</code> function.</p>
 <pre class="r"><code>kickstarter_sample %&gt;%
   select(main_category, category, project = name, status = state)</code></pre>
 <pre><code>## # A tibble: 100 x 4
-##    main_category category       project                            status 
-##    &lt;chr&gt;         &lt;chr&gt;          &lt;chr&gt;                              &lt;chr&gt;  
-##  1 Games         Video Games    Pharaoh's Conclave                 failed 
-##  2 Fashion       Apparel        Hypnoticz                          failed 
-##  3 Film &amp; Video  Documentary    &quot;\&quot;The Pageant Project\&quot; Document~ succes~
-##  4 Publishing    Publishing     Spoon of Caviar, The Caviar Book   failed 
-##  5 Fashion       Fashion        &quot;\&quot;HIS\&quot; Glory Tee&quot;                failed 
-##  6 Crafts        DIY            Idun Paper Bag DIY Kit             failed 
-##  7 Film &amp; Video  Action         Majic the Movie                    failed 
-##  8 Music         Music          Kalimba The Spirit of Earth Wind ~ undefi~
-##  9 Food          Food           &quot;\&quot;GIVE PEAS A CHANCE!\&quot; An all n~ succes~
-## 10 Games         Tabletop Games SMILING SAM THE GAME               failed 
+##    main_category category       project                           status  
+##    &lt;chr&gt;         &lt;chr&gt;          &lt;chr&gt;                             &lt;chr&gt;   
+##  1 Games         Video Games    Grimm: A Theatrical Tale          failed  
+##  2 Film &amp; Video  Narrative Film PRELUDE (Canceled)                canceled
+##  3 Art           Art            &quot;\&quot;1008\&quot; A visual contemplative~ success~
+##  4 Crafts        Printing       boxity - decorative storage rese~ canceled
+##  5 Comics        Comics         NAZ, A Historical Horror Comic    success~
+##  6 Publishing    Poetry         INSURANCE EDITIONS: Acme Rubbers~ success~
+##  7 Games         Video Games    Minecraft Photo Book              success~
+##  8 Food          Small Batch    Craib-Bay                         failed  
+##  9 Film &amp; Video  Action         Hamlet: Blood and Steel -- A Fra~ canceled
+## 10 Crafts        Crafts         Rotten Apple Fight!               failed  
 ## # ... with 90 more rows</code></pre>
 <p>If you want to retain all columns, you can rename by adding a ‘rename’ statement.</p>
 <pre class="r"><code>kickstarter_sample %&gt;% 
   rename(project = name, status = state, 
-         launch_date = date_launched, deadline = date_deadline)</code></pre>
-<pre><code>## # A tibble: 100 x 12
-##    ID     proje~ main~ cate~ launch_date         deadline            curr~
-##    &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt; &lt;dttm&gt;              &lt;dttm&gt;              &lt;chr&gt;
-##  1 19590~ Phara~ Games Vide~ 2015-12-19 19:36:35 2016-01-08 19:36:35 USD  
-##  2 45376~ Hypno~ Fash~ Appa~ 2015-09-29 02:13:54 2015-10-29 01:13:54 USD  
-##  3 15323~ &quot;\&quot;Th~ Film~ Docu~ 2013-04-09 04:13:41 2013-04-23 04:13:41 USD  
-##  4 12806~ Spoon~ Publ~ Publ~ 2014-12-06 20:36:23 2014-12-31 06:00:00 USD  
-##  5 20413~ &quot;\&quot;HI~ Fash~ Fash~ 2013-06-27 02:54:13 2013-08-01 02:45:00 USD  
-##  6 10999~ Idun ~ Craf~ DIY   2015-05-20 21:20:46 2015-06-19 21:20:46 SEK  
-##  7 21400~ Majic~ Film~ Acti~ 2015-11-03 23:24:33 2015-12-03 23:24:33 USD  
-##  8 98232~ Kalim~ Music Music 2015-03-23 17:10:14 2015-05-07 18:10:14 USD  
-##  9 13702~ &quot;\&quot;GI~ Food  Food  2013-08-06 23:06:26 2013-09-04 23:06:26 USD  
-## 10 57196~ SMILI~ Games Tabl~ 2012-03-31 12:02:12 2012-05-29 18:00:00 USD  
-## # ... with 90 more rows, and 5 more variables: goal &lt;dbl&gt;, pledged &lt;dbl&gt;,
-## #   status &lt;chr&gt;, backers &lt;int&gt;, country &lt;chr&gt;</code></pre>
+         launch_date = date_launched, deadline = date_deadline) %&gt;%
+  glimpse</code></pre>
+<pre><code>## Observations: 100
+## Variables: 12
+## $ ID            &lt;chr&gt; &quot;928179407&quot;, &quot;2131450892&quot;, &quot;998668803&quot;, &quot;1048191...
+## $ project       &lt;chr&gt; &quot;Grimm: A Theatrical Tale&quot;, &quot;PRELUDE (Canceled)&quot;...
+## $ main_category &lt;chr&gt; &quot;Games&quot;, &quot;Film &amp; Video&quot;, &quot;Art&quot;, &quot;Crafts&quot;, &quot;Comic...
+## $ category      &lt;chr&gt; &quot;Video Games&quot;, &quot;Narrative Film&quot;, &quot;Art&quot;, &quot;Printin...
+## $ launch_date   &lt;dttm&gt; 2017-07-03 03:41:11, 2011-08-04 06:37:10, 2013-...
+## $ deadline      &lt;dttm&gt; 2017-08-02 03:41:11, 2011-10-03 06:37:10, 2013-...
+## $ currency      &lt;chr&gt; &quot;USD&quot;, &quot;USD&quot;, &quot;USD&quot;, &quot;DKK&quot;, &quot;USD&quot;, &quot;USD&quot;, &quot;USD&quot;,...
+## $ goal          &lt;dbl&gt; 10000, 30000, 10000, 15000, 2000, 8000, 1501, 25...
+## $ pledged       &lt;dbl&gt; 27.0, 2375.0, 12467.0, 600.0, 2496.0, 9355.0, 27...
+## $ status        &lt;chr&gt; &quot;failed&quot;, &quot;canceled&quot;, &quot;successful&quot;, &quot;canceled&quot;, ...
+## $ backers       &lt;int&gt; 3, 8, 165, 2, 48, 52, 73, 3, 2, 10, 1, 2, 69, 0,...
+## $ country       &lt;chr&gt; &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;DK&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, ...</code></pre>
 <p><br></p>
 </div>
-<div id="selecting-columns" class="section level2">
-<h2><strong>Selecting columns</strong></h2>
 <div id="selecting-columns-by-their-full-name" class="section level3">
 <h3><strong>Selecting columns by their full name</strong></h3>
-<p>To select a few columns just add their names in the select statement. The order in which you script them, will determine the order in which they appear in the output - unless you create summary functions later on.</p>
-<pre class="r"><code>#adding selected columns
-kickstarter_sample %&gt;%
-  select(main_category, category, name, state)</code></pre>
-<pre><code>## # A tibble: 100 x 4
-##    main_category category       name                               state  
-##    &lt;chr&gt;         &lt;chr&gt;          &lt;chr&gt;                              &lt;chr&gt;  
-##  1 Games         Video Games    Pharaoh's Conclave                 failed 
-##  2 Fashion       Apparel        Hypnoticz                          failed 
-##  3 Film &amp; Video  Documentary    &quot;\&quot;The Pageant Project\&quot; Document~ succes~
-##  4 Publishing    Publishing     Spoon of Caviar, The Caviar Book   failed 
-##  5 Fashion       Fashion        &quot;\&quot;HIS\&quot; Glory Tee&quot;                failed 
-##  6 Crafts        DIY            Idun Paper Bag DIY Kit             failed 
-##  7 Film &amp; Video  Action         Majic the Movie                    failed 
-##  8 Music         Music          Kalimba The Spirit of Earth Wind ~ undefi~
-##  9 Food          Food           &quot;\&quot;GIVE PEAS A CHANCE!\&quot; An all n~ succes~
-## 10 Games         Tabletop Games SMILING SAM THE GAME               failed 
+<p>To select a few columns just add their names in the select statement. The order in which you code them, will determine the order in which they appear in the output - unless you create summary functions later on.</p>
+<pre class="r"><code>kickstarter_sample %&gt;%
+  select(main_category, state, name)</code></pre>
+<pre><code>## # A tibble: 100 x 3
+##    main_category state      name                                          
+##    &lt;chr&gt;         &lt;chr&gt;      &lt;chr&gt;                                         
+##  1 Games         failed     Grimm: A Theatrical Tale                      
+##  2 Film &amp; Video  canceled   PRELUDE (Canceled)                            
+##  3 Art           successful &quot;\&quot;1008\&quot; A visual contemplative journey&quot;     
+##  4 Crafts        canceled   boxity - decorative storage resembling city b~
+##  5 Comics        successful NAZ, A Historical Horror Comic                
+##  6 Publishing    successful INSURANCE EDITIONS: Acme Rubbers &amp; The Triump~
+##  7 Games         successful Minecraft Photo Book                          
+##  8 Food          failed     Craib-Bay                                     
+##  9 Film &amp; Video  canceled   Hamlet: Blood and Steel -- A Franchise Reboot~
+## 10 Crafts        failed     Rotten Apple Fight!                           
 ## # ... with 90 more rows</code></pre>
 <p>If want to add a lot of columns, it can save a lot of space to have a good look at your data and see whether you can’t get to your selection by using chunks, deselecting or even deselect a column and re-add it straight after.</p>
 <p>To add a chunk of columns use the <code>start_col:end_col</code> syntax:</p>
-<pre class="r"><code>#selecting chunks of columns
-kickstarter_sample %&gt;%
+<pre class="r"><code>kickstarter_sample %&gt;%
   select(name:main_category, currency:pledged)</code></pre>
 <pre><code>## # A tibble: 100 x 5
-##    name                                    main_cate~ curre~  goal pledged
-##    &lt;chr&gt;                                   &lt;chr&gt;      &lt;chr&gt;  &lt;dbl&gt;   &lt;dbl&gt;
-##  1 Pharaoh's Conclave                      Games      USD     6500  1.01e2
-##  2 Hypnoticz                               Fashion    USD    63500  2.00e0
-##  3 &quot;\&quot;The Pageant Project\&quot; Documenting G~ Film &amp; Vi~ USD     1350  1.50e3
-##  4 Spoon of Caviar, The Caviar Book        Publishing USD     2500  2.36e2
-##  5 &quot;\&quot;HIS\&quot; Glory Tee&quot;                     Fashion    USD     3000  2.50e2
-##  6 Idun Paper Bag DIY Kit                  Crafts     SEK    35000  1.96e3
-##  7 Majic the Movie                         Film &amp; Vi~ USD    15000  1.00e0
-##  8 Kalimba The Spirit of Earth Wind and F~ Music      USD     2000  2.09e3
-##  9 &quot;\&quot;GIVE PEAS A CHANCE!\&quot; An all natura~ Food       USD    12500  1.25e4
-## 10 SMILING SAM THE GAME                    Games      USD     8000  2.66e2
+##    name                               main_category currency  goal pledged
+##    &lt;chr&gt;                              &lt;chr&gt;         &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;
+##  1 Grimm: A Theatrical Tale           Games         USD      10000    27.0
+##  2 PRELUDE (Canceled)                 Film &amp; Video  USD      30000  2375  
+##  3 &quot;\&quot;1008\&quot; A visual contemplative ~ Art           USD      10000 12467  
+##  4 boxity - decorative storage resem~ Crafts        DKK      15000   600  
+##  5 NAZ, A Historical Horror Comic     Comics        USD       2000  2496  
+##  6 INSURANCE EDITIONS: Acme Rubbers ~ Publishing    USD       8000  9355  
+##  7 Minecraft Photo Book               Games         USD       1501  2742  
+##  8 Craib-Bay                          Food          USD      25000   175  
+##  9 Hamlet: Blood and Steel -- A Fran~ Film &amp; Video  USD       1000   250  
+## 10 Rotten Apple Fight!                Crafts        USD       5000   772  
 ## # ... with 90 more rows</code></pre>
 <p>An alternative is to <strong>deselect columns</strong> by adding a minus sign in front of the column name. You can also deselect chunks of columns. It’s even possible to deselect a whole chunk, and then re-add a column again (as long as it is in the same select statement)</p>
 <pre class="r"><code>#deselecting one column (ID), deselecting all columns from date_launched until the end, but re-adding some columns from that large chunk.
 kickstarter_sample %&gt;% 
   select(-ID, -(date_launched:country), currency:pledged)</code></pre>
 <pre><code>## # A tibble: 100 x 6
-##    name                            main_cat~ category  curre~  goal pledg~
-##    &lt;chr&gt;                           &lt;chr&gt;     &lt;chr&gt;     &lt;chr&gt;  &lt;dbl&gt;  &lt;dbl&gt;
-##  1 Pharaoh's Conclave              Games     Video Ga~ USD     6500 1.01e2
-##  2 Hypnoticz                       Fashion   Apparel   USD    63500 2.00e0
-##  3 &quot;\&quot;The Pageant Project\&quot; Docum~ Film &amp; V~ Document~ USD     1350 1.50e3
-##  4 Spoon of Caviar, The Caviar Bo~ Publishi~ Publishi~ USD     2500 2.36e2
-##  5 &quot;\&quot;HIS\&quot; Glory Tee&quot;             Fashion   Fashion   USD     3000 2.50e2
-##  6 Idun Paper Bag DIY Kit          Crafts    DIY       SEK    35000 1.96e3
-##  7 Majic the Movie                 Film &amp; V~ Action    USD    15000 1.00e0
-##  8 Kalimba The Spirit of Earth Wi~ Music     Music     USD     2000 2.09e3
-##  9 &quot;\&quot;GIVE PEAS A CHANCE!\&quot; An al~ Food      Food      USD    12500 1.25e4
-## 10 SMILING SAM THE GAME            Games     Tabletop~ USD     8000 2.66e2
+##    name                    main_category category   currency  goal pledged
+##    &lt;chr&gt;                   &lt;chr&gt;         &lt;chr&gt;      &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;
+##  1 Grimm: A Theatrical Ta~ Games         Video Gam~ USD      10000    27.0
+##  2 PRELUDE (Canceled)      Film &amp; Video  Narrative~ USD      30000  2375  
+##  3 &quot;\&quot;1008\&quot; A visual con~ Art           Art        USD      10000 12467  
+##  4 boxity - decorative st~ Crafts        Printing   DKK      15000   600  
+##  5 NAZ, A Historical Horr~ Comics        Comics     USD       2000  2496  
+##  6 INSURANCE EDITIONS: Ac~ Publishing    Poetry     USD       8000  9355  
+##  7 Minecraft Photo Book    Games         Video Gam~ USD       1501  2742  
+##  8 Craib-Bay               Food          Small Bat~ USD      25000   175  
+##  9 Hamlet: Blood and Stee~ Film &amp; Video  Action     USD       1000   250  
+## 10 Rotten Apple Fight!     Crafts        Crafts     USD       5000   772  
 ## # ... with 90 more rows</code></pre>
 <p><br></p>
 </div>
 <div id="selecting-columns-based-on-partial-names" class="section level3">
 <h3><strong>Selecting columns based on partial names</strong></h3>
 <p>If you have a lot of columns with a similar structure you can use partial matching by adding <code>starts_with()</code>, <code>ends_with()</code> or <code>contains()</code> in your select statement depending on how you want to match columns.</p>
-<p>In this particular dataframe it does not make a ton of sense to do this, but this would be the syntax:</p>
+<p>I can for instance add all columns that contain the word ‘category’, start with ‘date’ and end with the letter ‘e’.()</p>
 <pre class="r"><code>#selecting based on partial matches
 kickstarter_sample %&gt;%
   select(contains(&quot;category&quot;), starts_with(&quot;date&quot;), ends_with(&quot;e&quot;)) </code></pre>
 <pre><code>## # A tibble: 100 x 6
-##    main_category cate~ date_launched       date_deadline       name  state
-##    &lt;chr&gt;         &lt;chr&gt; &lt;dttm&gt;              &lt;dttm&gt;              &lt;chr&gt; &lt;chr&gt;
-##  1 Games         Vide~ 2015-12-19 19:36:35 2016-01-08 19:36:35 Phar~ fail~
-##  2 Fashion       Appa~ 2015-09-29 02:13:54 2015-10-29 01:13:54 Hypn~ fail~
-##  3 Film &amp; Video  Docu~ 2013-04-09 04:13:41 2013-04-23 04:13:41 &quot;\&quot;T~ succ~
-##  4 Publishing    Publ~ 2014-12-06 20:36:23 2014-12-31 06:00:00 Spoo~ fail~
-##  5 Fashion       Fash~ 2013-06-27 02:54:13 2013-08-01 02:45:00 &quot;\&quot;H~ fail~
-##  6 Crafts        DIY   2015-05-20 21:20:46 2015-06-19 21:20:46 Idun~ fail~
-##  7 Film &amp; Video  Acti~ 2015-11-03 23:24:33 2015-12-03 23:24:33 Maji~ fail~
-##  8 Music         Music 2015-03-23 17:10:14 2015-05-07 18:10:14 Kali~ unde~
-##  9 Food          Food  2013-08-06 23:06:26 2013-09-04 23:06:26 &quot;\&quot;G~ succ~
-## 10 Games         Tabl~ 2012-03-31 12:02:12 2012-05-29 18:00:00 SMIL~ fail~
-## # ... with 90 more rows</code></pre>
+##    main_category category  date_launched       date_deadline       name   
+##    &lt;chr&gt;         &lt;chr&gt;     &lt;dttm&gt;              &lt;dttm&gt;              &lt;chr&gt;  
+##  1 Games         Video Ga~ 2017-07-03 03:41:11 2017-08-02 03:41:11 Grimm:~
+##  2 Film &amp; Video  Narrativ~ 2011-08-04 06:37:10 2011-10-03 06:37:10 PRELUD~
+##  3 Art           Art       2013-11-25 23:32:42 2013-12-22 01:28:00 &quot;\&quot;100~
+##  4 Crafts        Printing  2014-11-10 19:19:20 2014-12-20 19:19:20 boxity~
+##  5 Comics        Comics    2016-03-15 15:59:22 2016-04-29 16:59:22 NAZ, A~
+##  6 Publishing    Poetry    2017-10-17 19:40:19 2017-11-21 06:00:00 INSURA~
+##  7 Games         Video Ga~ 2013-08-01 00:12:27 2013-09-04 01:59:00 Minecr~
+##  8 Food          Small Ba~ 2017-04-16 08:59:49 2017-06-15 08:59:49 Craib-~
+##  9 Film &amp; Video  Action    2015-07-20 10:21:03 2015-08-22 04:00:00 Hamlet~
+## 10 Crafts        Crafts    2009-07-25 05:14:55 2009-09-25 03:24:00 Rotten~
+## # ... with 90 more rows, and 1 more variable: state &lt;chr&gt;</code></pre>
 <p><br></p>
 </div>
 <div id="selecting-columns-based-on-regex" class="section level3">
 <h3><strong>Selecting columns based on regex</strong></h3>
 <p>The previous helper functions work with exact pattern matches. If you have similar patterns that are not entirely the same you can use any regular expression inside <code>matches()</code>.<br />
-The below example code will add any columns where you have ‘a’ followed by any letter, then an ‘e’ but to exclude the date columns no ‘d’ can be present in front of the ‘a’.</p>
+The below example code will add any columns where you have ‘a.e’ in the title with the dot representing any other letter, but excludes the word to be ‘da.e’, so the date columns will not be selected.</p>
 <pre class="r"><code>#selecting based on regex
 kickstarter_sample %&gt;%
   select(matches(&quot;[^d]a.e&quot;))</code></pre>
 <pre><code>## # A tibble: 100 x 4
-##    name                                     main_cate~ category   state   
-##    &lt;chr&gt;                                    &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt;   
-##  1 Pharaoh's Conclave                       Games      Video Gam~ failed  
-##  2 Hypnoticz                                Fashion    Apparel    failed  
-##  3 &quot;\&quot;The Pageant Project\&quot; Documenting Gi~ Film &amp; Vi~ Documenta~ success~
-##  4 Spoon of Caviar, The Caviar Book         Publishing Publishing failed  
-##  5 &quot;\&quot;HIS\&quot; Glory Tee&quot;                      Fashion    Fashion    failed  
-##  6 Idun Paper Bag DIY Kit                   Crafts     DIY        failed  
-##  7 Majic the Movie                          Film &amp; Vi~ Action     failed  
-##  8 Kalimba The Spirit of Earth Wind and Fi~ Music      Music      undefin~
-##  9 &quot;\&quot;GIVE PEAS A CHANCE!\&quot; An all natural~ Food       Food       success~
-## 10 SMILING SAM THE GAME                     Games      Tabletop ~ failed  
+##    name                                 main_category category     state  
+##    &lt;chr&gt;                                &lt;chr&gt;         &lt;chr&gt;        &lt;chr&gt;  
+##  1 Grimm: A Theatrical Tale             Games         Video Games  failed 
+##  2 PRELUDE (Canceled)                   Film &amp; Video  Narrative F~ cancel~
+##  3 &quot;\&quot;1008\&quot; A visual contemplative jo~ Art           Art          succes~
+##  4 boxity - decorative storage resembl~ Crafts        Printing     cancel~
+##  5 NAZ, A Historical Horror Comic       Comics        Comics       succes~
+##  6 INSURANCE EDITIONS: Acme Rubbers &amp; ~ Publishing    Poetry       succes~
+##  7 Minecraft Photo Book                 Games         Video Games  succes~
+##  8 Craib-Bay                            Food          Small Batch  failed 
+##  9 Hamlet: Blood and Steel -- A Franch~ Film &amp; Video  Action       cancel~
+## 10 Rotten Apple Fight!                  Crafts        Crafts       failed 
 ## # ... with 90 more rows</code></pre>
 <p><br></p>
 </div>
@@ -396,42 +411,42 @@ kickstarter_sample %&gt;%
 kickstarter_sample %&gt;%
   select_if(is.numeric)</code></pre>
 <pre><code>## # A tibble: 100 x 3
-##     goal  pledged backers
-##    &lt;dbl&gt;    &lt;dbl&gt;   &lt;int&gt;
-##  1  6500   101          2
-##  2 63500     2.00       2
-##  3  1350  1495         26
-##  4  2500   236          2
-##  5  3000   250          7
-##  6 35000  1960          9
-##  7 15000     1.00       1
-##  8  2000  2086          0
-##  9 12500 12526        191
-## 10  8000   266         10
+##     goal pledged backers
+##    &lt;dbl&gt;   &lt;dbl&gt;   &lt;int&gt;
+##  1 10000    27.0       3
+##  2 30000  2375         8
+##  3 10000 12467       165
+##  4 15000   600         2
+##  5  2000  2496        48
+##  6  8000  9355        52
+##  7  1501  2742        73
+##  8 25000   175         3
+##  9  1000   250         2
+## 10  5000   772        10
 ## # ... with 90 more rows</code></pre>
 <p>You can also select the negation but in this case you will need to add a tilde to ensure that you still pass a function to <code>select_if</code>.</p>
 <pre class="r"><code>kickstarter_sample %&gt;%
-  select_if(~!is.numeric(.))</code></pre>
-<pre><code>## # A tibble: 100 x 9
-##    ID     name   main~ cate~ date_launched       date_deadline       curr~
-##    &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt; &lt;dttm&gt;              &lt;dttm&gt;              &lt;chr&gt;
-##  1 19590~ Phara~ Games Vide~ 2015-12-19 19:36:35 2016-01-08 19:36:35 USD  
-##  2 45376~ Hypno~ Fash~ Appa~ 2015-09-29 02:13:54 2015-10-29 01:13:54 USD  
-##  3 15323~ &quot;\&quot;Th~ Film~ Docu~ 2013-04-09 04:13:41 2013-04-23 04:13:41 USD  
-##  4 12806~ Spoon~ Publ~ Publ~ 2014-12-06 20:36:23 2014-12-31 06:00:00 USD  
-##  5 20413~ &quot;\&quot;HI~ Fash~ Fash~ 2013-06-27 02:54:13 2013-08-01 02:45:00 USD  
-##  6 10999~ Idun ~ Craf~ DIY   2015-05-20 21:20:46 2015-06-19 21:20:46 SEK  
-##  7 21400~ Majic~ Film~ Acti~ 2015-11-03 23:24:33 2015-12-03 23:24:33 USD  
-##  8 98232~ Kalim~ Music Music 2015-03-23 17:10:14 2015-05-07 18:10:14 USD  
-##  9 13702~ &quot;\&quot;GI~ Food  Food  2013-08-06 23:06:26 2013-09-04 23:06:26 USD  
-## 10 57196~ SMILI~ Games Tabl~ 2012-03-31 12:02:12 2012-05-29 18:00:00 USD  
-## # ... with 90 more rows, and 2 more variables: state &lt;chr&gt;, country &lt;chr&gt;</code></pre>
+  select_if(~!is.character(.))</code></pre>
+<pre><code>## # A tibble: 100 x 5
+##    date_launched       date_deadline        goal pledged backers
+##    &lt;dttm&gt;              &lt;dttm&gt;              &lt;dbl&gt;   &lt;dbl&gt;   &lt;int&gt;
+##  1 2017-07-03 03:41:11 2017-08-02 03:41:11 10000    27.0       3
+##  2 2011-08-04 06:37:10 2011-10-03 06:37:10 30000  2375         8
+##  3 2013-11-25 23:32:42 2013-12-22 01:28:00 10000 12467       165
+##  4 2014-11-10 19:19:20 2014-12-20 19:19:20 15000   600         2
+##  5 2016-03-15 15:59:22 2016-04-29 16:59:22  2000  2496        48
+##  6 2017-10-17 19:40:19 2017-11-21 06:00:00  8000  9355        52
+##  7 2013-08-01 00:12:27 2013-09-04 01:59:00  1501  2742        73
+##  8 2017-04-16 08:59:49 2017-06-15 08:59:49 25000   175         3
+##  9 2015-07-20 10:21:03 2015-08-22 04:00:00  1000   250         2
+## 10 2009-07-25 05:14:55 2009-09-25 03:24:00  5000   772        10
+## # ... with 90 more rows</code></pre>
 <p><br></p>
 </div>
 <div id="selecting-columns-by-logical-expressions" class="section level3">
 <h3><strong>Selecting columns by logical expressions</strong></h3>
-<p>In fact, <code>select_if</code> allows you to select based on any logical function, not just based on data type. It is possible to select all columns which average is above 500 for instance. To avoid errors you do have to also select numeric columns only, which you can do either upfront for easier syntax, or in the same line.<br />
-Similarly <code>mean &gt; 500</code> is not a function in itself, so you will need to add a tilde upfront to turn the statement into a function.</p>
+<p>In fact, <code>select_if</code> allows you to select based on any logical function, not just based on data type. It is possible to select all columns with an average above 500 for instance.<br />
+To avoid errors you do have to also select numeric columns only, which you can do either upfront for easier syntax, or in the same line. Similarly <code>mean &gt; 500</code> is not a function in itself, so you will need to add a tilde upfront to turn the statement into a function.</p>
 <pre class="r"><code>kickstarter_sample %&gt;%
   select_if(is.numeric) %&gt;%
   select_if(~mean(., na.rm=TRUE) &gt; 500)</code></pre>
@@ -439,154 +454,151 @@ Similarly <code>mean &gt; 500</code> is not a function in itself, so you will ne
 <pre class="r"><code>kickstarter_sample %&gt;%
   select_if(~is.numeric(.) &amp; mean(., na.rm=TRUE)&gt;500)</code></pre>
 <pre><code>## # A tibble: 100 x 2
-##     goal  pledged
-##    &lt;dbl&gt;    &lt;dbl&gt;
-##  1  6500   101   
-##  2 63500     2.00
-##  3  1350  1495   
-##  4  2500   236   
-##  5  3000   250   
-##  6 35000  1960   
-##  7 15000     1.00
-##  8  2000  2086   
-##  9 12500 12526   
-## 10  8000   266   
+##     goal pledged
+##    &lt;dbl&gt;   &lt;dbl&gt;
+##  1 10000    27.0
+##  2 30000  2375  
+##  3 10000 12467  
+##  4 15000   600  
+##  5  2000  2496  
+##  6  8000  9355  
+##  7  1501  2742  
+##  8 25000   175  
+##  9  1000   250  
+## 10  5000   772  
 ## # ... with 90 more rows</code></pre>
 <p>One of the useful functions for <code>select_if</code> is <code>n_distinct()</code>, which counts the amount of distinct values that can be found in a column.<br />
-To return the columns that have less than 20 distinct answers for instance you pass <code>~n_distinct(.) &lt; 20</code> within the select_if statement. Given that in itself n_distinct(.) &lt; 20 is not a function, you will need to put a tilde in front.</p>
+To return the columns that have less than 20 distinct answers you pass <code>~n_distinct(.) &lt; 20</code> within the select_if statement. Given that in itself <code>n_distinct(.) &lt; 20</code> is not a function, you will need to put a tilde in front.</p>
 <pre class="r"><code>kickstarter_sample %&gt;%
   select_if(~n_distinct(.) &lt; 20)</code></pre>
 <pre><code>## # A tibble: 100 x 4
 ##    main_category currency state      country
 ##    &lt;chr&gt;         &lt;chr&gt;    &lt;chr&gt;      &lt;chr&gt;  
 ##  1 Games         USD      failed     US     
-##  2 Fashion       USD      failed     US     
-##  3 Film &amp; Video  USD      successful US     
-##  4 Publishing    USD      failed     US     
-##  5 Fashion       USD      failed     US     
-##  6 Crafts        SEK      failed     SE     
-##  7 Film &amp; Video  USD      failed     US     
-##  8 Music         USD      undefined  &quot;N,\&quot;0&quot;
-##  9 Food          USD      successful US     
-## 10 Games         USD      failed     US     
+##  2 Film &amp; Video  USD      canceled   US     
+##  3 Art           USD      successful US     
+##  4 Crafts        DKK      canceled   DK     
+##  5 Comics        USD      successful US     
+##  6 Publishing    USD      successful US     
+##  7 Games         USD      successful US     
+##  8 Food          USD      failed     US     
+##  9 Film &amp; Video  USD      canceled   US     
+## 10 Crafts        USD      failed     US     
 ## # ... with 90 more rows</code></pre>
+<p><br></p>
+<hr />
 </div>
-</div>
-<div id="adding-new-columns" class="section level2">
-<h2><strong>Adding new columns</strong></h2>
-<p>You can make new columns with the <code>mutate</code>function. This new column can take many forms, it can be a calculation based on values in other columns:</p>
-<pre class="r"><code>#from calculations
+<div id="adding-new-columns" class="section level3">
+<h3><strong>Adding new columns</strong></h3>
+<p>You can make new columns with the <code>mutate</code>function. This new column can take many forms, you can do pretty much anything that you can do on normal vectors, inside a mutate function.<br />
+One of the many options is a calculation based on values in other columns:</p>
+<pre class="r"><code>#new column which looks at the difference between pledged money and the original goal
 kickstarter_sample %&gt;%
   select(name, pledged, goal) %&gt;%
   mutate(delta_pledged_goal = pledged - goal)</code></pre>
 <pre><code>## # A tibble: 100 x 4
-##    name                                       pledged  goal delta_pledged~
-##    &lt;chr&gt;                                        &lt;dbl&gt; &lt;dbl&gt;          &lt;dbl&gt;
-##  1 Pharaoh's Conclave                          1.01e2  6500       - 6399  
-##  2 Hypnoticz                                   2.00e0 63500       -63498  
-##  3 &quot;\&quot;The Pageant Project\&quot; Documenting Girl~  1.50e3  1350          145  
-##  4 Spoon of Caviar, The Caviar Book            2.36e2  2500       - 2264  
-##  5 &quot;\&quot;HIS\&quot; Glory Tee&quot;                         2.50e2  3000       - 2750  
-##  6 Idun Paper Bag DIY Kit                      1.96e3 35000       -33040  
-##  7 Majic the Movie                             1.00e0 15000       -14999  
-##  8 Kalimba The Spirit of Earth Wind and Fire~  2.09e3  2000           86.0
-##  9 &quot;\&quot;GIVE PEAS A CHANCE!\&quot; An all natural b~  1.25e4 12500           26.0
-## 10 SMILING SAM THE GAME                        2.66e2  8000       - 7734  
+##    name                                    pledged  goal delta_pledged_go~
+##    &lt;chr&gt;                                     &lt;dbl&gt; &lt;dbl&gt;             &lt;dbl&gt;
+##  1 Grimm: A Theatrical Tale                   27.0 10000            - 9973
+##  2 PRELUDE (Canceled)                       2375   30000            -27625
+##  3 &quot;\&quot;1008\&quot; A visual contemplative journ~ 12467   10000              2467
+##  4 boxity - decorative storage resembling~   600   15000            -14400
+##  5 NAZ, A Historical Horror Comic           2496    2000               496
+##  6 INSURANCE EDITIONS: Acme Rubbers &amp; The~  9355    8000              1355
+##  7 Minecraft Photo Book                     2742    1501              1241
+##  8 Craib-Bay                                 175   25000            -24825
+##  9 Hamlet: Blood and Steel -- A Franchise~   250    1000            -  750
+## 10 Rotten Apple Fight!                       772    5000            - 4228
 ## # ... with 90 more rows</code></pre>
-<p>It can be made with functions such as average, median, max, min, …<br />
-You can add multiple new columns in one <code>mutate</code> operation.</p>
+<p>The new column can be made with functions such as average, median, max, min, …</p>
 <pre class="r"><code>kickstarter_sample %&gt;%
   select(pledged, goal) %&gt;%
   mutate(pledge_delta_vs_average = pledged - mean(pledged),
          goal_delta_vs_max = goal - max(goal))</code></pre>
 <pre><code>## # A tibble: 100 x 4
-##     pledged  goal pledge_delta_vs_average goal_delta_vs_max
-##       &lt;dbl&gt; &lt;dbl&gt;                   &lt;dbl&gt;             &lt;dbl&gt;
-##  1   101     6500                   -7488           -293500
-##  2     2.00 63500                   -7587           -236500
-##  3  1495     1350                   -6094           -298650
-##  4   236     2500                   -7353           -297500
-##  5   250     3000                   -7339           -297000
-##  6  1960    35000                   -5629           -265000
-##  7     1.00 15000                   -7588           -285000
-##  8  2086     2000                   -5503           -298000
-##  9 12526    12500                    4937           -287500
-## 10   266     8000                   -7323           -292000
+##    pledged  goal pledge_delta_vs_average goal_delta_vs_max
+##      &lt;dbl&gt; &lt;dbl&gt;                   &lt;dbl&gt;             &lt;dbl&gt;
+##  1    27.0 10000                   -9778           -240000
+##  2  2375   30000                   -7430           -220000
+##  3 12467   10000                    2662           -240000
+##  4   600   15000                   -9205           -235000
+##  5  2496    2000                   -7309           -248000
+##  6  9355    8000                   - 450           -242000
+##  7  2742    1501                   -7063           -248499
+##  8   175   25000                   -9630           -225000
+##  9   250    1000                   -9555           -249000
+## 10   772    5000                   -9033           -245000
 ## # ... with 90 more rows</code></pre>
-<p>Adding any regex operation inside a pipe is also possible. You can use string’s <code>str_extract()</code> function in combation with any character or regex patterns.</p>
-<pre class="r"><code>#regex-based mutation
+<p>You can also mutate string columns with stringr’s <code>str_extract()</code> function in combation with any character or regex patterns.</p>
+<pre class="r"><code>#adding new column which has only the first word of the project name
 kickstarter_sample %&gt;%
   mutate(name_first_word = str_extract(name, pattern = &quot;^\\w+&quot;)) %&gt;%
   select(name, name_first_word)</code></pre>
 <pre><code>## # A tibble: 100 x 2
-##    name                                                           name_fi~
-##    &lt;chr&gt;                                                          &lt;chr&gt;   
-##  1 Pharaoh's Conclave                                             Pharaoh 
-##  2 Hypnoticz                                                      Hypnoti~
-##  3 &quot;\&quot;The Pageant Project\&quot; Documenting Girlhood Dreams&quot;          &lt;NA&gt;    
-##  4 Spoon of Caviar, The Caviar Book                               Spoon   
-##  5 &quot;\&quot;HIS\&quot; Glory Tee&quot;                                            &lt;NA&gt;    
-##  6 Idun Paper Bag DIY Kit                                         Idun    
-##  7 Majic the Movie                                                Majic   
-##  8 Kalimba The Spirit of Earth Wind and Fire DVD and CD Project   Kalimba 
-##  9 &quot;\&quot;GIVE PEAS A CHANCE!\&quot; An all natural baked chickpea snack.&quot; &lt;NA&gt;    
-## 10 SMILING SAM THE GAME                                           SMILING 
+##    name                                                    name_first_word
+##    &lt;chr&gt;                                                   &lt;chr&gt;          
+##  1 Grimm: A Theatrical Tale                                Grimm          
+##  2 PRELUDE (Canceled)                                      PRELUDE        
+##  3 &quot;\&quot;1008\&quot; A visual contemplative journey&quot;               &lt;NA&gt;           
+##  4 boxity - decorative storage resembling city buildings   boxity         
+##  5 NAZ, A Historical Horror Comic                          NAZ            
+##  6 INSURANCE EDITIONS: Acme Rubbers &amp; The Triumph of Life  INSURANCE      
+##  7 Minecraft Photo Book                                    Minecraft      
+##  8 Craib-Bay                                               Craib          
+##  9 Hamlet: Blood and Steel -- A Franchise Reboot'd (Cance~ Hamlet         
+## 10 Rotten Apple Fight!                                     Rotten         
 ## # ... with 90 more rows</code></pre>
 <p><br></p>
 </div>
-<div id="merging-and-unmerging-columns" class="section level2">
-<h2><strong>Merging and unmerging columns</strong></h2>
+<div id="merging-and-unmerging-columns" class="section level3">
+<h3><strong>Merging and unmerging columns</strong></h3>
 <p>You can paste two columns together via tidyr’s <code>unite()</code> function. You specify the new column name, and then the columns to be united, and lastly what seperator you want to use.</p>
-<pre class="r"><code>(ks_merge &lt;- kickstarter_sample %&gt;%
+<pre class="r"><code>#merging currency and goal columns
+(ks_merge &lt;- kickstarter_sample %&gt;%
   unite(goal_currency, currency, goal, sep=&quot; &quot;) %&gt;%
   select(name, goal_currency))</code></pre>
 <pre><code>## # A tibble: 100 x 2
-##    name                                                           goal_cu~
-##  * &lt;chr&gt;                                                          &lt;chr&gt;   
-##  1 Pharaoh's Conclave                                             USD 6500
-##  2 Hypnoticz                                                      USD 635~
-##  3 &quot;\&quot;The Pageant Project\&quot; Documenting Girlhood Dreams&quot;          USD 1350
-##  4 Spoon of Caviar, The Caviar Book                               USD 2500
-##  5 &quot;\&quot;HIS\&quot; Glory Tee&quot;                                            USD 3000
-##  6 Idun Paper Bag DIY Kit                                         SEK 350~
-##  7 Majic the Movie                                                USD 150~
-##  8 Kalimba The Spirit of Earth Wind and Fire DVD and CD Project   USD 2000
-##  9 &quot;\&quot;GIVE PEAS A CHANCE!\&quot; An all natural baked chickpea snack.&quot; USD 125~
-## 10 SMILING SAM THE GAME                                           USD 8000
+##    name                                                      goal_currency
+##  * &lt;chr&gt;                                                     &lt;chr&gt;        
+##  1 Grimm: A Theatrical Tale                                  USD 10000    
+##  2 PRELUDE (Canceled)                                        USD 30000    
+##  3 &quot;\&quot;1008\&quot; A visual contemplative journey&quot;                 USD 10000    
+##  4 boxity - decorative storage resembling city buildings     DKK 15000    
+##  5 NAZ, A Historical Horror Comic                            USD 2000     
+##  6 INSURANCE EDITIONS: Acme Rubbers &amp; The Triumph of Life    USD 8000     
+##  7 Minecraft Photo Book                                      USD 1501     
+##  8 Craib-Bay                                                 USD 25000    
+##  9 Hamlet: Blood and Steel -- A Franchise Reboot'd (Cancele~ USD 1000     
+## 10 Rotten Apple Fight!                                       USD 5000     
 ## # ... with 90 more rows</code></pre>
 <p>You can unmerge any columns by using tidyr’s <code>separate())</code> function. To do this, you have to specify the column to be splitted, followed by the new column names, and which seperator it has to look for.</p>
-<pre class="r"><code>ks_merge %&gt;%
+<pre class="r"><code>#splitting the previous made column
+ks_merge %&gt;%
   separate(goal_currency, into = c(&quot;goal&quot;, &quot;currency&quot;), sep=&quot; &quot;)</code></pre>
 <pre><code>## # A tibble: 100 x 3
-##    name                                                      goal  curren~
-##  * &lt;chr&gt;                                                     &lt;chr&gt; &lt;chr&gt;  
-##  1 Pharaoh's Conclave                                        USD   6500   
-##  2 Hypnoticz                                                 USD   63500  
-##  3 &quot;\&quot;The Pageant Project\&quot; Documenting Girlhood Dreams&quot;     USD   1350   
-##  4 Spoon of Caviar, The Caviar Book                          USD   2500   
-##  5 &quot;\&quot;HIS\&quot; Glory Tee&quot;                                       USD   3000   
-##  6 Idun Paper Bag DIY Kit                                    SEK   35000  
-##  7 Majic the Movie                                           USD   15000  
-##  8 Kalimba The Spirit of Earth Wind and Fire DVD and CD Pro~ USD   2000   
-##  9 &quot;\&quot;GIVE PEAS A CHANCE!\&quot; An all natural baked chickpea s~ USD   12500  
-## 10 SMILING SAM THE GAME                                      USD   8000   
+##    name                                                     goal  currency
+##  * &lt;chr&gt;                                                    &lt;chr&gt; &lt;chr&gt;   
+##  1 Grimm: A Theatrical Tale                                 USD   10000   
+##  2 PRELUDE (Canceled)                                       USD   30000   
+##  3 &quot;\&quot;1008\&quot; A visual contemplative journey&quot;                USD   10000   
+##  4 boxity - decorative storage resembling city buildings    DKK   15000   
+##  5 NAZ, A Historical Horror Comic                           USD   2000    
+##  6 INSURANCE EDITIONS: Acme Rubbers &amp; The Triumph of Life   USD   8000    
+##  7 Minecraft Photo Book                                     USD   1501    
+##  8 Craib-Bay                                                USD   25000   
+##  9 Hamlet: Blood and Steel -- A Franchise Reboot'd (Cancel~ USD   1000    
+## 10 Rotten Apple Fight!                                      USD   5000    
 ## # ... with 90 more rows</code></pre>
+<p><br></p>
 </div>
-<div id="adding-columns-from-other-tables" class="section level2">
-<h2><strong>Adding columns from other tables</strong></h2>
+<div id="adding-columns-from-other-tables" class="section level3">
+<h3><strong>Adding columns from other tables</strong></h3>
 <p>If I want to add information from another type, you can use the joining functions from dplyr. The kickstarter tables only contains a country_code. If i want to add a full country name, or I want to do analysis on specific country data, I can add data from another table.<br />
 Take for instance this country_info data:</p>
-<pre class="r"><code>country_info &lt;- read_csv(&quot;data/country_codes.csv&quot;)</code></pre>
-<pre><code>## Parsed with column specification:
-## cols(
-##   COUNTRY = col_character(),
-##   COUNTRY_CODE = col_character(),
-##   ISO_CODES = col_character(),
-##   POPULATION = col_number(),
-##   AREA_KM2 = col_number(),
-##   GDP_USD = col_character()
-## )</code></pre>
-<pre class="r"><code>country_info &lt;- country_info %&gt;%
+<pre class="r"><code>country_info &lt;- read_csv(&quot;data/country_codes.csv&quot;)
+
+#splitting the ISO_codes column which shows &quot;US / USA&quot; into two different columns
+country_info &lt;- country_info %&gt;%
   separate(ISO_CODES, into = c(&quot;code_alpha2&quot;, &quot;code_alpha3&quot;), sep = &quot; / &quot;) %&gt;%
   glimpse</code></pre>
 <pre><code>## Observations: 240
@@ -602,24 +614,23 @@ Take for instance this country_info data:</p>
 <pre class="r"><code>#joining column data
 kickstarter %&gt;%
   select(project = name, state, country) %&gt;%
-  left_join(country_info, by = c(&quot;country&quot; = &quot;code_alpha2&quot;))</code></pre>
-<pre><code>## # A tibble: 378,661 x 9
-##    project        state  count~ COUNTRY COUNTR~ code~ POPUL~ AREA_~ GDP_U~
-##    &lt;chr&gt;          &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt; 
-##  1 The Songs of ~ failed GB     United~ 44      GBR   6.23e7 2.45e5 2.49 ~
-##  2 Greeting From~ failed US     United~ 1       USA   3.10e8 9.63e6 16.72~
-##  3 Where is Hank? failed US     United~ 1       USA   3.10e8 9.63e6 16.72~
-##  4 ToshiCapital ~ failed US     United~ 1       USA   3.10e8 9.63e6 16.72~
-##  5 Community Fil~ cance~ US     United~ 1       USA   3.10e8 9.63e6 16.72~
-##  6 Monarch Espre~ succe~ US     United~ 1       USA   3.10e8 9.63e6 16.72~
-##  7 Support Solar~ succe~ US     United~ 1       USA   3.10e8 9.63e6 16.72~
-##  8 Chaser Strips~ failed US     United~ 1       USA   3.10e8 9.63e6 16.72~
-##  9 SPIN - Premiu~ cance~ US     United~ 1       USA   3.10e8 9.63e6 16.72~
-## 10 STUDIO IN THE~ cance~ US     United~ 1       USA   3.10e8 9.63e6 16.72~
-## # ... with 378,651 more rows</code></pre>
+  left_join(country_info, by = c(&quot;country&quot; = &quot;code_alpha2&quot;)) %&gt;%
+  glimpse</code></pre>
+<pre><code>## Observations: 378,661
+## Variables: 9
+## $ project      &lt;chr&gt; &quot;The Songs of Adelaide &amp; Abullah&quot;, &quot;Greeting From...
+## $ state        &lt;chr&gt; &quot;failed&quot;, &quot;failed&quot;, &quot;failed&quot;, &quot;failed&quot;, &quot;canceled...
+## $ country      &lt;chr&gt; &quot;GB&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;US&quot;, &quot;...
+## $ COUNTRY      &lt;chr&gt; &quot;United Kingdom&quot;, &quot;United States&quot;, &quot;United States...
+## $ COUNTRY_CODE &lt;chr&gt; &quot;44&quot;, &quot;1&quot;, &quot;1&quot;, &quot;1&quot;, &quot;1&quot;, &quot;1&quot;, &quot;1&quot;, &quot;1&quot;, &quot;1&quot;, &quot;1&quot;...
+## $ code_alpha3  &lt;chr&gt; &quot;GBR&quot;, &quot;USA&quot;, &quot;USA&quot;, &quot;USA&quot;, &quot;USA&quot;, &quot;USA&quot;, &quot;USA&quot;, ...
+## $ POPULATION   &lt;dbl&gt; 62348447, 310232863, 310232863, 310232863, 310232...
+## $ AREA_KM2     &lt;dbl&gt; 244820, 9629091, 9629091, 9629091, 9629091, 96290...
+## $ GDP_USD      &lt;chr&gt; &quot;2.49 Trillion&quot;, &quot;16.72 Trillion&quot;, &quot;16.72 Trillio...</code></pre>
+<p><br></p>
 </div>
-<div id="miscellaneous" class="section level2">
-<h2><strong>Miscellaneous</strong></h2>
+<div id="miscellaneous" class="section level3">
+<h3><strong>Miscellaneous</strong></h3>
 <p>Some dataframes have rownames that are not actually a column in itself, like the mtcars dataset:</p>
 <pre class="r"><code>mtcars %&gt;%
   head</code></pre>
@@ -641,12 +652,14 @@ kickstarter %&gt;%
 ## 4    Hornet 4 Drive 21.4   6  258 110 3.08 3.215 19.44  1  0    3    1
 ## 5 Hornet Sportabout 18.7   8  360 175 3.15 3.440 17.02  0  0    3    2
 ## 6           Valiant 18.1   6  225 105 2.76 3.460 20.22  1  0    3    1</code></pre>
+<p><br><br></p>
+<hr />
 </div>
 </div>
 <div id="rows" class="section level1">
 <h1>Rows</h1>
-<div id="arranging-rows" class="section level2">
-<h2><strong>Arranging rows</strong></h2>
+<div id="arranging-rows" class="section level3">
+<h3><strong>Arranging rows</strong></h3>
 <p>In many cases you do not want to show the dataset as it is, but want to arrange based on a certain column. The function arrange allows you to order a column alphabetically (if the column is a character column), or based on small-large with the <code>arrange()</code> function.<br />
 If you want descending order, add <code>arrange(desc())</code> to your pipeline. The below code shows the 5 projects with the highest amount of backers.</p>
 <pre class="r"><code>kickstarter %&gt;%
@@ -655,16 +668,15 @@ If you want descending order, add <code>arrange(desc())</code> to your pipeline.
   top_n(5)</code></pre>
 <pre><code>## Selecting by backers</code></pre>
 <pre><code>## # A tibble: 5 x 4
-##   main_category category       project                              backe~
+##   main_category category       project                             backers
 ##   &lt;chr&gt;         &lt;chr&gt;          &lt;chr&gt;                                 &lt;int&gt;
 ## 1 Games         Tabletop Games Exploding Kittens                    219382
 ## 2 Design        Product Design Fidget Cube: A Vinyl Desk Toy        154926
-## 3 Technology    Web            Bring Reading Rainbow Back for Ever~ 105857
+## 3 Technology    Web            Bring Reading Rainbow Back for Eve~  105857
 ## 4 Film &amp; Video  Narrative Film The Veronica Mars Movie Project       91585
 ## 5 Games         Video Games    Double Fine Adventure                 87142</code></pre>
+<p><br></p>
 </div>
-<div id="selecting-rows" class="section level2">
-<h2><strong>Selecting rows</strong></h2>
 <div id="filtering-based-on-numerical-columns" class="section level3">
 <h3><strong>Filtering based on numerical columns</strong></h3>
 <p>To select certain rows, you use the <code>filter()</code> function. You can pass a logical statement to filter:<br />
@@ -689,6 +701,7 @@ To filter all projects where the goal was higher than 1000:</p>
 <p>For numeric columns you can also pass arange, either by using two logical statments:<code>filter(goal &lt;= 1000, goal &gt;= 500)</code> or by using the <code>between</code> option:</p>
 <pre class="r"><code>kickstarter %&gt;%
   filter(between(goal, 500, 1000)) %&gt;%
+  #Alternative: filter(goal &lt;= 1000, goal &gt;= 500)
   select(name, goal)</code></pre>
 <pre><code>## # A tibble: 42,583 x 2
 ##    name                                                          goal
@@ -789,53 +802,55 @@ Or you can use the <code>!=</code> operator to deselect any values:</p>
 <p>You can add multiple conditions inside one filter statement. By default adding multiple conditions with a comma, means that both statments have to be true for the row to be retained</p>
 <pre class="r"><code>#AND clause in filter
 kickstarter %&gt;%
-  filter(country == &quot;BE&quot;, goal &gt; 200000)</code></pre>
+  filter(country == &quot;BE&quot;, goal &gt; 200000) %&gt;%
+  print(5)</code></pre>
 <pre><code>## # A tibble: 17 x 12
-##    ID     name   main~ cate~ date_launched       date_deadline       curr~
-##    &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt; &lt;dttm&gt;              &lt;dttm&gt;              &lt;chr&gt;
-##  1 10058~ The L~ Film~ Film~ 2015-09-14 17:36:42 2015-11-13 17:36:42 EUR  
-##  2 12028~ BISE:~ Tech~ Apps  2015-12-21 17:14:48 2016-01-22 17:14:48 EUR  
-##  3 14036~ BELGI~ Food  Rest~ 2015-11-02 19:50:18 2015-12-07 19:50:18 EUR  
-##  4 18411~ Belgi~ Food  Rest~ 2015-11-09 13:06:51 2015-12-09 13:06:51 EUR  
-##  5 20941~ EcoDr~ Tech~ Make~ 2016-10-13 12:28:46 2016-11-07 12:28:46 EUR  
-##  6 23727~ &quot;Flyb~ Tech~ Tech~ 2017-07-16 14:56:18 2017-08-15 14:56:18 EUR  
-##  7 25633~ Bring~ Food  Rest~ 2015-12-11 11:19:57 2016-01-10 11:19:57 EUR  
-##  8 41775~ BISE:~ Tech~ Apps  2015-12-24 12:00:31 2016-01-25 12:00:31 EUR  
-##  9 52439~ Soul ~ Desi~ Desi~ 2016-02-06 02:42:44 2016-03-07 02:42:44 EUR  
-## 10 58201~ Go4ou~ Food  Farms 2017-10-30 20:45:23 2017-12-29 21:45:23 EUR  
-## 11 72182~ Blue ~ Games Vide~ 2016-03-08 15:00:02 2016-04-12 15:00:02 EUR  
-## 12 76174~ Slide~ Tech~ Tech~ 2015-07-07 21:04:39 2015-08-09 21:04:39 EUR  
-## 13 78761~ The C~ Games Vide~ 2015-07-15 09:23:06 2015-09-13 09:23:06 EUR  
-## 14 78805~ Belgi~ Food  Rest~ 2017-10-03 22:10:06 2017-11-17 22:10:06 EUR  
-## 15 80782~ Go4Ou~ Food  Farms 2016-09-18 22:12:28 2016-10-25 22:08:00 EUR  
-## 16 92015~ Event~ Tech~ Apps  2016-07-28 18:45:45 2016-08-27 18:45:45 EUR  
-## 17 98606~ Halal~ Tech~ Apps  2017-09-18 12:54:53 2017-10-18 12:54:53 EUR  
-## # ... with 5 more variables: goal &lt;dbl&gt;, pledged &lt;dbl&gt;, state &lt;chr&gt;,
-## #   backers &lt;int&gt;, country &lt;chr&gt;</code></pre>
+##    ID      name                main_category category  date_launched      
+##    &lt;chr&gt;   &lt;chr&gt;               &lt;chr&gt;         &lt;chr&gt;     &lt;dttm&gt;             
+##  1 100583~ The Last Dictator   Film &amp; Video  Film &amp; V~ 2015-09-14 17:36:42
+##  2 120288~ BISE: Meet instant~ Technology    Apps      2015-12-21 17:14:48
+##  3 140369~ BELGIAN GOLD (Canc~ Food          Restaura~ 2015-11-02 19:50:18
+##  4 184112~ Belgian Gold        Food          Restaura~ 2015-11-09 13:06:51
+##  5 209411~ EcoDraft: High end~ Technology    Makerspa~ 2016-10-13 12:28:46
+##  6 237278~ Flyboard Air®       Technology    Technolo~ 2017-07-16 14:56:18
+##  7 256335~ Bringing Belgian F~ Food          Restaura~ 2015-12-11 11:19:57
+##  8 417752~ BISE: Meet instant~ Technology    Apps      2015-12-24 12:00:31
+##  9 524396~ Soul Society | Spi~ Design        Design    2016-02-06 02:42:44
+## 10 582018~ Go4ourika 2018      Food          Farms     2017-10-30 20:45:23
+## 11 721826~ Blue Angelo : The ~ Games         Video Ga~ 2016-03-08 15:00:02
+## 12 761743~ Slidenjoy - Double~ Technology    Technolo~ 2015-07-07 21:04:39
+## 13 787614~ The Cortex Game     Games         Video Ga~ 2015-07-15 09:23:06
+## 14 788050~ Belgian-French Bis~ Food          Restaura~ 2017-10-03 22:10:06
+## 15 807822~ Go4Ourika           Food          Farms     2016-09-18 22:12:28
+## 16 920155~ Eventurapp          Technology    Apps      2016-07-28 18:45:45
+## 17 986066~ HalalAdvisor Ltd    Technology    Apps      2017-09-18 12:54:53
+## # ... with 7 more variables: date_deadline &lt;dttm&gt;, currency &lt;chr&gt;,
+## #   goal &lt;dbl&gt;, pledged &lt;dbl&gt;, state &lt;chr&gt;, backers &lt;int&gt;, country &lt;chr&gt;</code></pre>
 <p>If you want a row to be retained in one OR the other condition, you have to add the <code>|</code> operator.<br />
 You can combine multiple and, or and not conditions:</p>
 <pre class="r"><code>#AND and OR clause
 kickstarter %&gt;%
   filter(country == &quot;BE&quot;, (state == &quot;successful&quot; | goal &gt; 1000000))</code></pre>
 <pre><code>## # A tibble: 153 x 12
-##    ID     name   main~ cate~ date_launched       date_deadline       curr~
-##    &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt; &lt;dttm&gt;              &lt;dttm&gt;              &lt;chr&gt;
-##  1 10041~ Chime~ Games Tabl~ 2017-03-31 11:57:59 2017-04-28 00:00:00 EUR  
-##  2 10087~ Inter~ Phot~ Phot~ 2016-04-22 15:19:17 2016-05-12 15:19:17 EUR  
-##  3 10190~ Handc~ Fash~ Acce~ 2015-12-11 10:52:29 2016-01-01 10:52:29 EUR  
-##  4 10248~ The r~ Fash~ Appa~ 2016-07-22 06:31:14 2016-08-21 06:31:14 EUR  
-##  5 10615~ &quot;Part~ Food  Farms 2015-11-28 11:39:45 2015-12-17 23:59:00 EUR  
-##  6 10673~ Het O~ Games Tabl~ 2017-10-10 16:15:35 2017-11-12 21:00:00 EUR  
-##  7 10757~ A His~ Publ~ Nonf~ 2016-03-27 01:47:16 2016-05-16 02:47:16 EUR  
-##  8 10830~ &quot;From~ Desi~ Desi~ 2017-07-18 06:25:34 2017-08-02 06:25:34 EUR  
-##  9 10925~ BOOK:~ Phot~ Phot~ 2017-06-06 09:58:42 2017-06-29 20:00:00 EUR  
-## 10 10958~ BOHO ~ Music Clas~ 2015-07-27 17:57:01 2015-08-17 17:57:01 EUR  
-## # ... with 143 more rows, and 5 more variables: goal &lt;dbl&gt;, pledged &lt;dbl&gt;,
-## #   state &lt;chr&gt;, backers &lt;int&gt;, country &lt;chr&gt;</code></pre>
+##    ID      name                main_category category  date_launched      
+##    &lt;chr&gt;   &lt;chr&gt;               &lt;chr&gt;         &lt;chr&gt;     &lt;dttm&gt;             
+##  1 100415~ Chimera Station - ~ Games         Tabletop~ 2017-03-31 11:57:59
+##  2 100870~ Interactions - the~ Photography   Photoboo~ 2016-04-22 15:19:17
+##  3 101904~ Handcrafted leathe~ Fashion       Accessor~ 2015-12-11 10:52:29
+##  4 102487~ The revolutionary ~ Fashion       Apparel   2016-07-22 06:31:14
+##  5 106159~ Partage ta Vache #~ Food          Farms     2015-11-28 11:39:45
+##  6 106733~ Het Oog des Meeste~ Games         Tabletop~ 2017-10-10 16:15:35
+##  7 107578~ A History of Disne~ Publishing    Nonficti~ 2016-03-27 01:47:16
+##  8 108302~ &quot;From Architecture~ Design        Design    2017-07-18 06:25:34
+##  9 109256~ BOOK: Fools With D~ Photography   Photoboo~ 2017-06-06 09:58:42
+## 10 109585~ BOHO Players - Per~ Music         Classica~ 2015-07-27 17:57:01
+## # ... with 143 more rows, and 7 more variables: date_deadline &lt;dttm&gt;,
+## #   currency &lt;chr&gt;, goal &lt;dbl&gt;, pledged &lt;dbl&gt;, state &lt;chr&gt;, backers &lt;int&gt;,
+## #   country &lt;chr&gt;</code></pre>
+<p><br></p>
 </div>
-</div>
-<div id="filtering-across-columns" class="section level2">
-<h2><strong>Filtering across columns</strong></h2>
+<div id="filtering-across-columns" class="section level3">
+<h3><strong>Filtering across columns</strong></h3>
 <p>If you are filtering across columns for the same values, <code>filter_all()</code> can save you some typing space.<br />
 Imagine we want to retain any projects that have the word “fashion” inside a category or inside its project name. We can do this by adding 3 conditions:</p>
 <pre class="r"><code>kickstarter %&gt;%
@@ -843,40 +858,26 @@ Imagine we want to retain any projects that have the word “fashion” inside a
   filter(str_detect(tolower(name), pattern = &quot;fashion&quot;) |
          str_detect(tolower(category), pattern = &quot;fashion&quot;) |
          str_detect(tolower(main_category), pattern = &quot;fashion&quot;))</code></pre>
-<pre><code>## # A tibble: 23,224 x 3
-##    name                                                      main_~ categ~
-##    &lt;chr&gt;                                                     &lt;chr&gt;  &lt;chr&gt; 
-##  1 CMUK. Shoes: Take on Life Feet First.                     Fashi~ Fashi~
-##  2 MikeyJ clothing brand fundraiser                          Fashi~ Child~
-##  3 Fashion removeable decoration jewel accessory hells shoes Fashi~ Acces~
-##  4 &quot;\&quot;It's Complicated\&quot; by Ariana Salome&quot;                   Fashi~ Ready~
-##  5 ANVIL Beard                                               Fashi~ Fashi~
-##  6 The Locals Only Shirt                                     Fashi~ Fashi~
-##  7 Bold Threadz                                              Fashi~ Fashi~
-##  8 Happy Fix USA                                             Fashi~ Appar~
-##  9 #NotMyPresident Protest Tees                              Fashi~ Appar~
-## 10 Packable, Fashionable &amp; Protective; the ULTIMATE sun hat. Fashi~ Fashi~
-## # ... with 23,214 more rows</code></pre>
 <p>This is a lot of typing and copy pasting though. An alternative is to use <code>filter_all()</code>:</p>
 <pre class="r"><code>kickstarter %&gt;%
   select(name, contains(&quot;category&quot;)) %&gt;%
   filter_all(any_vars(str_detect(tolower(.), pattern = &quot;fashion&quot;))) %&gt;%
   filter(main_category != &quot;Fashion&quot;)</code></pre>
 <pre><code>## # A tibble: 408 x 3
-##    name                                            main_categ~ category   
-##    &lt;chr&gt;                                           &lt;chr&gt;       &lt;chr&gt;      
-##  1 FashionRider Show &amp; Tell - Video Documentary    Film &amp; Vid~ Film &amp; Vid~
-##  2 Collabrative Fashion Film                       Film &amp; Vid~ Experiment~
-##  3 Clotheshorse - Fashion.                         Crafts      Crafts     
-##  4 God, Fashion, Baking, and DIY Youtube Channel   Film &amp; Vid~ Webseries  
-##  5 Arcane Creations: A Rock Fashion Show 4 Starvi~ Art         Mixed Media
-##  6 que Bottle: The Fashionable &amp; Collapsible Trav~ Design      Product De~
-##  7 Introducing Free Press Fashions &amp; The Tea Shir~ Journalism  Journalism 
-##  8 Smart Wallet: Locator &amp; Charger a Fashionable ~ Technology  Hardware   
-##  9 INK &amp; FASHION                                   Publishing  Art Books  
-## 10 Journal of a Single Girl through Italy: Art, F~ Journalism  Journalism 
+##    name                                         main_category category    
+##    &lt;chr&gt;                                        &lt;chr&gt;         &lt;chr&gt;       
+##  1 FashionRider Show &amp; Tell - Video Documentary Film &amp; Video  Film &amp; Video
+##  2 Collabrative Fashion Film                    Film &amp; Video  Experimental
+##  3 Clotheshorse - Fashion.                      Crafts        Crafts      
+##  4 God, Fashion, Baking, and DIY Youtube Chann~ Film &amp; Video  Webseries   
+##  5 Arcane Creations: A Rock Fashion Show 4 Sta~ Art           Mixed Media 
+##  6 que Bottle: The Fashionable &amp; Collapsible T~ Design        Product Des~
+##  7 Introducing Free Press Fashions &amp; The Tea S~ Journalism    Journalism  
+##  8 Smart Wallet: Locator &amp; Charger a Fashionab~ Technology    Hardware    
+##  9 INK &amp; FASHION                                Publishing    Art Books   
+## 10 Journal of a Single Girl through Italy: Art~ Journalism    Journalism  
 ## # ... with 398 more rows</code></pre>
-<p>The <code>filter_all()</code> function can also be used with numericl input. To retain all rows where both goal and columns are below 5000 you can use <code>filter_all(all_vars())</code>:</p>
+<p>The <code>filter_all()</code> function can also be used with numeric input. To retain all rows where both goal and columns are below 5000 you can use <code>filter_all(all_vars())</code>:</p>
 <pre class="r"><code>kickstarter %&gt;%
   select(goal, pledged) %&gt;%
   filter_all(all_vars(.&lt;5000))</code></pre>
@@ -916,70 +917,326 @@ To retain any rows where either column is below 5000.</p>
 <p>The above solution does not always work well if you have both character and numeric columns. In these cases it might be better to use <code>filter_if</code>:</p>
 <pre class="r"><code>kickstarter %&gt;%
   select(name, goal, pledged) %&gt;%
-  filter_if(is.numeric, all_vars(.&gt;1000000))</code></pre>
+  filter_if(is.numeric, all_vars(.&gt;1000000)) %&gt;%
+  print(5)</code></pre>
 <pre><code>## # A tibble: 18 x 3
-##    name                                                        goal pledg~
-##    &lt;chr&gt;                                                      &lt;dbl&gt;  &lt;dbl&gt;
-##  1 THE P-51 AUTOMATIC WATCH by REC - Recycling Horsepower!  1400000 3.19e6
-##  2 Bring Back MYSTERY SCIENCE THEATER 3000                  2000000 5.76e6
-##  3 &quot;PixelJunk\u2122 Monsters Duo Mobile Game&quot;              12000000 1.73e6
-##  4 The Newest Hottest Spike Lee Joint                       1250000 1.42e6
-##  5 Ghost S1 MkII                                            2000000 2.59e6
-##  6 Camelot Unchained                                        2000000 2.23e6
-##  7 Obduction                                                1100000 1.32e6
-##  8 The Veronica Mars Movie Project                          2000000 5.70e6
-##  9 WISH I WAS HERE                                          2000000 3.11e6
-## 10 &quot;DRESS UP BOX \u2014 Make-Believe Clothing for Girls&quot;    1100000 1.12e6
-## 11 &quot;The 901 Collection - Made from salvaged Porsche 911\u~  1400000 4.08e6
-## 12 Folkegaven: Underholdningsorkestret (Canceled)           3000000 1.06e6
-## 13 MARUHI Cup &amp; Saucer                                      3000000 1.75e6
-## 14 Project Eternity                                         1100000 3.99e6
-## 15 Blue Mountain State: The Movie                           1500000 1.91e6
-## 16 The Bards Tale IV                                        1250000 1.52e6
-## 17 Elite: Dangerous                                         1250000 1.58e6
-## 18 Shenmue 3                                                2000000 6.33e6</code></pre>
+##    name                                                       goal pledged
+##    &lt;chr&gt;                                                     &lt;dbl&gt;   &lt;dbl&gt;
+##  1 THE P-51 AUTOMATIC WATCH by REC - Recycling Horsepower!  1.40e6 3193364
+##  2 Bring Back MYSTERY SCIENCE THEATER 3000                  2.00e6 5764229
+##  3 PixelJunk™ Monsters Duo Mobile Game                      1.20e7 1729241
+##  4 The Newest Hottest Spike Lee Joint                       1.25e6 1418910
+##  5 Ghost S1 MkII                                            2.00e6 2588997
+##  6 Camelot Unchained                                        2.00e6 2232933
+##  7 Obduction                                                1.10e6 1321306
+##  8 The Veronica Mars Movie Project                          2.00e6 5702153
+##  9 WISH I WAS HERE                                          2.00e6 3105473
+## 10 DRESS UP BOX — Make-Believe Clothing for Girls           1.10e6 1121500
+## 11 The 901 Collection - Made from salvaged Porsche 911’s    1.40e6 4075739
+## 12 Folkegaven: Underholdningsorkestret (Canceled)           3.00e6 1058547
+## 13 MARUHI Cup &amp; Saucer                                      3.00e6 1748630
+## 14 Project Eternity                                         1.10e6 3986929
+## 15 Blue Mountain State: The Movie                           1.50e6 1911827
+## 16 The Bards Tale IV                                        1.25e6 1519681
+## 17 Elite: Dangerous                                         1.25e6 1578316
+## 18 Shenmue 3                                                2.00e6 6333296</code></pre>
+<p><br><br></p>
+<hr />
+</div>
+</div>
+<div id="miscellaneous-1" class="section level1">
+<h1>Miscellaneous</h1>
+<p>A few final tips:</p>
+<div id="geting-data-out-of-a-pipe-as-a-vector" class="section level3">
+<h3><strong>Geting data out of a pipe as a vector</strong></h3>
+<p>If you want to get info in a vector, you can use the <code>pull()</code> function at the end. Imagine you want the mean value of a specific subgroup. If you just save the output it will be tibble of 1x1 rather than a vector.:</p>
+<pre class="r"><code>kickstarter %&gt;%
+  filter(state == &quot;successful&quot;, country==&quot;BE&quot;) %&gt;%
+  summarise(mean(pledged))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##   `mean(pledged)`
+##             &lt;dbl&gt;
+## 1           21973</code></pre>
+<p>By adding a <code>pull()</code> statement you will get a vector as outpt:</p>
+<pre class="r"><code>kickstarter %&gt;%
+  filter(state == &quot;successful&quot;, country==&quot;BE&quot;) %&gt;%
+  summarise(mean(pledged)) %&gt;%
+  pull()</code></pre>
+<pre><code>## [1] 21972.74</code></pre>
+<p>You can also use pull on a longer vector:</p>
+<pre class="r"><code>#what different categories are there? 
+kickstarter %&gt;%
+  count(main_category) %&gt;%
+  pull(main_category)</code></pre>
+<pre><code>##  [1] &quot;Art&quot;          &quot;Comics&quot;       &quot;Crafts&quot;       &quot;Dance&quot;       
+##  [5] &quot;Design&quot;       &quot;Fashion&quot;      &quot;Film &amp; Video&quot; &quot;Food&quot;        
+##  [9] &quot;Games&quot;        &quot;Journalism&quot;   &quot;Music&quot;        &quot;Photography&quot; 
+## [13] &quot;Publishing&quot;   &quot;Technology&quot;   &quot;Theater&quot;</code></pre>
 <p><br></p>
-<div id="miscellaneous-1" class="section level4">
-<h4>miscellaneous</h4>
 </div>
-</div>
-</div>
-<div id="what-different-categories-are-there" class="section level1">
-<h1>what different categories are there?</h1>
-<p>kickstarter %&gt;% group_by(main_category) %&gt;% arrange %&gt;% pull(main_category)</p>
-</div>
-<div id="or-pull-out-a-mean-as-a-vector-rather-than-a-tibble-of-1x1" class="section level1">
-<h1>or pull out a mean as a vector, rather than a tibble of 1x1</h1>
-<p>kickstarter %&gt;% filter(state == “successful”, country==“BE”) %&gt;% summarise(mean(pledged)) %&gt;% pull()</p>
-</div>
-<div id="knitrkable" class="section level1">
-<h1>knitr::kable</h1>
-<p>kickstarter %&gt;% group_by(main_category) %&gt;% summarise(n = n(), perc_successful = mean(state == “successful”), avg_backers = mean(backers), avg_pledged = mean(pledged)) %&gt;% arrange(desc(perc_successful)) %&gt;% knitr::kable()</p>
-</div>
-<div id="add-printnnrow." class="section level1">
-<h1>add print(n=nrow(.))</h1>
-<div id="in-some-tibble-versions-only-10-rows-are-printed." class="section level3">
-<h3>in some tibble versions only 10 rows are printed.</h3>
-</div>
-<div id="if-you-want-to-force-printing-all-rows-use" class="section level3">
-<h3>if you want to force printing all rows, use:</h3>
-<p>print(n=nrow(.))</p>
-<div id="other-uses-of-piping" class="section level4">
-<h4>other uses of piping</h4>
-</div>
-</div>
-</div>
-<div id="webscraping" class="section level1">
-<h1>webscraping</h1>
-<p>library(xml2) library(rvest)</p>
-<p>read_html(“<a href="https://www.relisten.be/playlists/radio1/01-01-2018.html" class="uri">https://www.relisten.be/playlists/radio1/01-01-2018.html</a>”) %&gt;% html_nodes(css = “.media-body &gt; h4 &gt; span”) %&gt;% html_text()</p>
-</div>
-<div id="modeling-purrr-and-broom" class="section level1">
-<h1>modeling: purrr and broom</h1>
-<p>library(tidyverse) library(broom)</p>
-<p>mtcars %&gt;% nest(-cyl) %&gt;% mutate(model = map(data, ~lm(mpg ~ wt, data = .))) %&gt;% mutate(tidied = map(model, tidy)) %&gt;% unnest(tidied)</p>
-<div id="many-many-more" class="section level2">
-<h2>many many more</h2>
+<div id="printing-prettier-tables-in-rmd" class="section level3">
+<h3><strong>Printing prettier tables in Rmd</strong></h3>
+<p>Inside an Rmardown document you can print prettier tables pretty easily by adding a <code>knitr::kable()</code> statement.</p>
+<pre class="r"><code>kickstarter %&gt;%
+  group_by(main_category) %&gt;%
+  summarise(number_of_projects = n(),
+            perc_successful = mean(state == &quot;successful&quot;),
+            avg_backers = mean(backers),
+            avg_pledged = mean(pledged)) %&gt;%
+  arrange(desc(perc_successful)) %&gt;%
+  knitr::kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">main_category</th>
+<th align="right">number_of_projects</th>
+<th align="right">perc_successful</th>
+<th align="right">avg_backers</th>
+<th align="right">avg_pledged</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Dance</td>
+<td align="right">3768</td>
+<td align="right">0.6204883</td>
+<td align="right">42.80122</td>
+<td align="right">3690.799</td>
+</tr>
+<tr class="even">
+<td align="left">Theater</td>
+<td align="right">10913</td>
+<td align="right">0.5987355</td>
+<td align="right">47.05727</td>
+<td align="right">4097.225</td>
+</tr>
+<tr class="odd">
+<td align="left">Comics</td>
+<td align="right">10819</td>
+<td align="right">0.5399760</td>
+<td align="right">134.77124</td>
+<td align="right">6899.311</td>
+</tr>
+<tr class="even">
+<td align="left">Music</td>
+<td align="right">51918</td>
+<td align="right">0.4660619</td>
+<td align="right">52.16832</td>
+<td align="right">3992.736</td>
+</tr>
+<tr class="odd">
+<td align="left">Art</td>
+<td align="right">28153</td>
+<td align="right">0.4088374</td>
+<td align="right">42.20509</td>
+<td align="right">3606.970</td>
+</tr>
+<tr class="even">
+<td align="left">Film &amp; Video</td>
+<td align="right">63585</td>
+<td align="right">0.3715184</td>
+<td align="right">66.01521</td>
+<td align="right">6362.734</td>
+</tr>
+<tr class="odd">
+<td align="left">Games</td>
+<td align="right">35231</td>
+<td align="right">0.3553121</td>
+<td align="right">321.78561</td>
+<td align="right">21865.173</td>
+</tr>
+<tr class="even">
+<td align="left">Design</td>
+<td align="right">30070</td>
+<td align="right">0.3508480</td>
+<td align="right">241.29963</td>
+<td align="right">27119.751</td>
+</tr>
+<tr class="odd">
+<td align="left">Publishing</td>
+<td align="right">39874</td>
+<td align="right">0.3084717</td>
+<td align="right">55.96602</td>
+<td align="right">3638.716</td>
+</tr>
+<tr class="even">
+<td align="left">Photography</td>
+<td align="right">10779</td>
+<td align="right">0.3066147</td>
+<td align="right">39.71407</td>
+<td align="right">3664.647</td>
+</tr>
+<tr class="odd">
+<td align="left">Food</td>
+<td align="right">24602</td>
+<td align="right">0.2473376</td>
+<td align="right">54.17247</td>
+<td align="right">5340.163</td>
+</tr>
+<tr class="even">
+<td align="left">Fashion</td>
+<td align="right">22816</td>
+<td align="right">0.2451350</td>
+<td align="right">61.44780</td>
+<td align="right">6549.032</td>
+</tr>
+<tr class="odd">
+<td align="left">Crafts</td>
+<td align="right">8809</td>
+<td align="right">0.2400954</td>
+<td align="right">27.28369</td>
+<td align="right">2016.154</td>
+</tr>
+<tr class="even">
+<td align="left">Journalism</td>
+<td align="right">4755</td>
+<td align="right">0.2128286</td>
+<td align="right">38.29464</td>
+<td align="right">3218.085</td>
+</tr>
+<tr class="odd">
+<td align="left">Technology</td>
+<td align="right">32569</td>
+<td align="right">0.1975498</td>
+<td align="right">164.46661</td>
+<td align="right">22586.165</td>
+</tr>
+</tbody>
+</table>
+<p>You can also provide more info on how the table has to look:<br />
+For more options look into the <code>kable()</code> and <code>kableExtra()</code> documentation.</p>
+<pre class="r"><code>kickstarter %&gt;%
+  group_by(main_category) %&gt;%
+  summarise(number_of_projects = n(),
+            perc_successful = mean(state == &quot;successful&quot;)*100,
+            avg_backers = mean(backers),
+            avg_pledged = mean(pledged)) %&gt;%
+  mutate(perc_successful = paste(round(perc_successful), &quot;%&quot;)) %&gt;%
+  arrange(desc(perc_successful)) %&gt;%
+  knitr::kable(digits = 0,
+               caption = &quot;Summary of the data by main category&quot;, 
+               col.names = c(&quot;Main Category&quot;, &quot;Number of Projects&quot;, 
+                               &quot;Percent Successful&quot;, &quot;Average amount of backers&quot;, 
+                               &quot;Average amount of money pledged&quot;))</code></pre>
+<table>
+<caption>Summary of the data by main category</caption>
+<thead>
+<tr class="header">
+<th align="left">Main Category</th>
+<th align="right">Number of Projects</th>
+<th align="left">Percent Successful</th>
+<th align="right">Average amount of backers</th>
+<th align="right">Average amount of money pledged</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Dance</td>
+<td align="right">3768</td>
+<td align="left">62 %</td>
+<td align="right">43</td>
+<td align="right">3691</td>
+</tr>
+<tr class="even">
+<td align="left">Theater</td>
+<td align="right">10913</td>
+<td align="left">60 %</td>
+<td align="right">47</td>
+<td align="right">4097</td>
+</tr>
+<tr class="odd">
+<td align="left">Comics</td>
+<td align="right">10819</td>
+<td align="left">54 %</td>
+<td align="right">135</td>
+<td align="right">6899</td>
+</tr>
+<tr class="even">
+<td align="left">Music</td>
+<td align="right">51918</td>
+<td align="left">47 %</td>
+<td align="right">52</td>
+<td align="right">3993</td>
+</tr>
+<tr class="odd">
+<td align="left">Art</td>
+<td align="right">28153</td>
+<td align="left">41 %</td>
+<td align="right">42</td>
+<td align="right">3607</td>
+</tr>
+<tr class="even">
+<td align="left">Film &amp; Video</td>
+<td align="right">63585</td>
+<td align="left">37 %</td>
+<td align="right">66</td>
+<td align="right">6363</td>
+</tr>
+<tr class="odd">
+<td align="left">Games</td>
+<td align="right">35231</td>
+<td align="left">36 %</td>
+<td align="right">322</td>
+<td align="right">21865</td>
+</tr>
+<tr class="even">
+<td align="left">Design</td>
+<td align="right">30070</td>
+<td align="left">35 %</td>
+<td align="right">241</td>
+<td align="right">27120</td>
+</tr>
+<tr class="odd">
+<td align="left">Photography</td>
+<td align="right">10779</td>
+<td align="left">31 %</td>
+<td align="right">40</td>
+<td align="right">3665</td>
+</tr>
+<tr class="even">
+<td align="left">Publishing</td>
+<td align="right">39874</td>
+<td align="left">31 %</td>
+<td align="right">56</td>
+<td align="right">3639</td>
+</tr>
+<tr class="odd">
+<td align="left">Fashion</td>
+<td align="right">22816</td>
+<td align="left">25 %</td>
+<td align="right">61</td>
+<td align="right">6549</td>
+</tr>
+<tr class="even">
+<td align="left">Food</td>
+<td align="right">24602</td>
+<td align="left">25 %</td>
+<td align="right">54</td>
+<td align="right">5340</td>
+</tr>
+<tr class="odd">
+<td align="left">Crafts</td>
+<td align="right">8809</td>
+<td align="left">24 %</td>
+<td align="right">27</td>
+<td align="right">2016</td>
+</tr>
+<tr class="even">
+<td align="left">Journalism</td>
+<td align="right">4755</td>
+<td align="left">21 %</td>
+<td align="right">38</td>
+<td align="right">3218</td>
+</tr>
+<tr class="odd">
+<td align="left">Technology</td>
+<td align="right">32569</td>
+<td align="left">20 %</td>
+<td align="right">164</td>
+<td align="right">22586</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 
