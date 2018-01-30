@@ -1,6 +1,6 @@
 ---
 title: "Introduction to piping"
-output: html_document
+output: md_document
 ---
 
 
@@ -52,7 +52,8 @@ Using pipelines has some advantages:
 - Making it easy to add steps anywhere in the sequence of operations if the output is not entirely what you desired
 - Making it easy to stepwise explore someone elses code as you can highlight step by step and run it.  
 
-There are some watch-outs in using pipes inside functions and packages though.
+There are some watch-outs in using pipes inside functions and packages though. If something goes wrong, you can get undecipherable error messages with very clue on what went wrong. The general advice is to use temporary variables inside function, which are local anyway and won't live outside your function.
+
 <br>
 
 **Quick tip: **  
