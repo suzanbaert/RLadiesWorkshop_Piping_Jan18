@@ -1,6 +1,9 @@
 ---
 title: "blogpost2"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
 ---
 
 This is a second post in a series of dplyr functions.
@@ -12,7 +15,7 @@ this second one covers
 
 **The data**
 As in the previous blog posts a lot of these functions truly when you have a lot of columns, but to make it easy on people to copy paste code and experiment, I'm using a built-in dataset:
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 
 glimpse(msleep)
@@ -21,7 +24,7 @@ glimpse(msleep)
 
 # Getting the columns you need:
 
-## **Transforming data into new columns**
+## **Transforming data into a new column**
 
 You can make new columns with the `mutate` function. The options inside mutate are almost endless: pretty much anything that you can do to normal vectors, can be done inside a mutate function.  
 Anything inside a mutate can either be a new column (by giving mutate a new column name), or can replace the current column (by keeping the same column name)
@@ -44,6 +47,18 @@ msleep %>%
   mutate(sleep_total_vs_AVG = sleep_total - round(mean(sleep_total),1),
          sleep_total_vs_MIN = sleep_total - min(sleep_total))
 ```
+<br>
+
+The `ifelse` statement is particularly useful if you don't want to mutate the whole column in the same way. You first specify a logical statement, afterwards what needs to happen if the statement returns `TRUE`, and lastly what needs to happen if it's  `FALSE`.  
+  
+Imagine that we have a database with two large values which we assume are typo's or measurement errors:
+
+```{r}
+msleep %>%
+  mutate(brainwt2 = ifelse(brainwt > 4, NA, brainwt)) %>%
+  select(starts_with("brain")) %>%
+  arrange(desc(brainwt))
+```
 <br> 
 
 You can also mutate string columns with stringr's `str_extract()` function in combation with any character or regex patterns.
@@ -55,6 +70,71 @@ msleep %>%
   select(name, name_last_word)
 ```
 
+<br><br>
+
+
+
+
+## **Workin with discrete columns**
+
+### **Recoding discrete columns**
+
+To rename or reorganize current discrete columns, you can use `recode()` inside a `mutate()` statement:
+
+
+```{r}
+msleep %>%
+  mutate(conservation2 = recode(conservation,
+                        "en" = "Endangered",
+                        "lc" = "Least_Concern",
+                        .default = "other")) %>%
+  count(conservation2)
+  
+```
+<br>
+
+
+### **Creating new discrete column (two levels)**
+
+The `if_else()` statement is useful when you want to turn a numeric column into a discrete one. 
+
+```{r}
+msleep %>%
+  mutate(sleep_time = ifelse(sleep_total > 10, "long", "short")) %>%
+  glimpse
+  
+```
+<br>
+
+### **Creating new discrete column (multiple levels)**
+
+The `ifelse()` can be nested but if you want more than two levels, it might be even easier to use `case_when()` which allows as many statements as you like.  
+The arguments are evaluated in order, so only the rows where the first statement is not true will continue to be evaluated for the next statement. For everything that is left at the end just use the `TRUE ~ "newname"`.
+
+```{r}
+msleep %>%
+  mutate(sleep_total_disc = case_when(
+    sleep_total > 13 ~"very long",
+    sleep_total > 10 ~ "long",
+    sleep_total > 7 ~"limited",
+    TRUE ~ "short")) %>%
+  mutate(sleep_total_disc = forcats::fct_relevel(sleep_total_disc, 
+                                                 "short", "limited", "long", "very long")) %>%
+  count(sleep_total_disc)
+```
+<br>
+
+The `case_when()` function does not only work inside a column, but can be used for grouping across columns:
+
+```{r}
+msleep %>%
+  mutate(silly_groups = case_when(
+    brainwt < 0.001 ~ "light_headed",
+    sleep_total > 10 ~ "lazy_sleeper",
+    is.na(sleep_rem) ~ "absent_rem",
+    TRUE ~ "other")) %>%
+  count(silly_groups)
+```
 <br><br>
 
 
@@ -110,7 +190,7 @@ msleep %>%
 
 
 
-## Mutating all columns
+## **Mutating several columns at once**
 
 
 ```{r}

@@ -3,12 +3,10 @@ title: "data_wranging_p1"
 output:
   html_document:
     toc: true
-    toc_depth: 3
-#    toc_float: true
+    toc_depth: 2
 ---
 
 
------
 
 Data Wrangling Part 1: Basic to Advanced Ways to Select Columns
 
@@ -27,46 +25,14 @@ glimpse(msleep)
 ```
 
 To note: In some cases I have added a `glimpse()` statement to allow you to see the columns selected in the output tibble without printing all the data every time. 
-<br><br>
+
+<br>
 
 -----
 
-
-
-# **Re-ordering columns**
-You can use the `select()` function (see below) to re-order columns. The order in which you select them will determine the final order.  
-```{r}
-msleep %>%
-  select(conservation, sleep_total, name) %>%
-  glimpse
-```
 <br>
 
-If you are just moving a few columns to the front, you can use `everything()` afterwards which will add all the remaining columns and save a lot of typing.
-```{r}
-msleep %>%
-  select(conservation, sleep_total, everything()) %>%
-  glimpse
-```
-<br><br>
 
-
-# **Renaming a column**
-If you will be using a `select()` statement, you can rename straight in the `select` function. 
-```{r}
-msleep %>%
-  select(animal = name, sleep_total, extinction_threat = conservation) %>%
-  glimpse
-```
-<br>
-
-If you want to retain all columns and therefore have no `select()` statement, you can rename by adding a 'rename' statement.
-```{r}
-msleep %>% 
-  rename(animal = name, extinction_threat = conservation) %>%
-  glimpse
-```
-<br><br>
 
 
 # **Selecting columns**
@@ -187,3 +153,100 @@ To return the columns that have less than 20 distinct answers for instance you p
 msleep %>%
   select_if(~n_distinct(.) < 10)
 ```
+
+<br>
+
+-----
+
+<br>
+
+
+
+# **Re-ordering columns**
+You can use the `select()` function (see below) to re-order columns. The order in which you select them will determine the final order.  
+```{r}
+msleep %>%
+  select(conservation, sleep_total, name) %>%
+  glimpse
+```
+<br>
+
+If you are just moving a few columns to the front, you can use `everything()` afterwards which will add all the remaining columns and save a lot of typing.
+```{r}
+msleep %>%
+  select(conservation, sleep_total, everything()) %>%
+  glimpse
+```
+
+<br>
+
+-----
+
+<br>
+
+# **Column names**
+Sometimes changes are necessary to column names in itself:
+
+
+## **Renaming columns**
+If you will be using a `select()` statement, you can rename straight in the `select` function. 
+```{r}
+msleep %>%
+  select(animal = name, sleep_total, extinction_threat = conservation) %>%
+  glimpse
+```
+<br>
+
+If you want to retain all columns and therefore have no `select()` statement, you can rename by adding a 'rename' statement.
+```{r}
+msleep %>% 
+  rename(animal = name, extinction_threat = conservation) %>%
+  glimpse
+```
+<br><br>
+
+
+## **Reformatting column names**
+
+The `select_all()` function allows changes to all columns, and takes a function as an argument.  
+  
+To get all column names in uppercase, you can use `toupper()`, similarly you could use `tolower()`.
+```{r}
+msleep %>%
+  select_all(toupper)
+```
+<br>
+
+You can go further than that by creating functions on the fly: if you have messy column names coming from excel for instance you can replace all white spaces with an underscore.  
+```{r}
+#making an unclean database:
+msleep2 <- select(msleep, name, sleep_total, brainwt)
+colnames(msleep2) <- c("name", "sleep total", "brain weight")
+
+msleep2 %>%
+  select_all(~str_replace(., " ", "_"))
+```
+
+<br><br>
+
+
+
+
+## **Row names to column**
+
+Some dataframes have rownames that are not actually a column in itself, like the mtcars dataset: 
+   
+```{r}
+ mtcars %>%
+   head
+```
+<br> 
+ 
+If you want this column to be an actual column, you can use the `rownames_to_column()` function, and specify a new column name.
+
+```{r}
+ mtcars %>%
+   rownames_to_column("car_model") %>%
+   head
+```
+ 
