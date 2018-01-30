@@ -1,0 +1,145 @@
+---
+title: "blogpost2"
+output: html_document
+---
+
+This is a second post in a series of dplyr functions.
+The first one can be found here (link), and covered teh following elements
+- content
+
+this second one covers
+- content
+
+**The data**
+As in the previous blog posts a lot of these functions truly when you have a lot of columns, but to make it easy on people to copy paste code and experiment, I'm using a built-in dataset:
+```{r}
+library(tidyverse)
+
+glimpse(msleep)
+```
+<br><br>
+
+# Getting the columns you need:
+
+## **Transforming data into new columns**
+
+You can make new columns with the `mutate` function. The options inside mutate are almost endless: pretty much anything that you can do to normal vectors, can be done inside a mutate function.  
+Anything inside a mutate can either be a new column (by giving mutate a new column name), or can replace the current column (by keeping the same column name)
+  
+One of the many options is a calculation based on values in other columns:
+
+```{r}
+#new column for sleep time in minutes
+msleep %>%
+  select(name, sleep_total) %>%
+  mutate(sleep_total_min = sleep_total * 60)
+```
+<br>
+
+The new column can be made with functions such as average, median, max, min, ...   
+
+```{r}
+msleep %>%
+  select(name, sleep_total) %>%
+  mutate(sleep_total_vs_AVG = sleep_total - round(mean(sleep_total),1),
+         sleep_total_vs_MIN = sleep_total - min(sleep_total))
+```
+<br> 
+
+You can also mutate string columns with stringr's `str_extract()` function in combation with any character or regex patterns.
+
+```{r}
+#adding new column which has only the first word of the project name
+msleep %>%
+  mutate(name_last_word = tolower(str_extract(name, pattern = "\\w+$"))) %>%
+  select(name, name_last_word)
+```
+
+<br><br>
+
+
+
+
+## **Merging and unmerging columns**
+
+Take for example this dataset
+```{r}
+(conservation_expl <- read_csv("conservation_explanation.csv"))
+```
+
+
+You can unmerge any columns by using tidyr's `separate())` function. To do this, you have to specify the column to be splitted, followed by the new column names, and which seperator it has to look for. 
+
+```{r}
+(conservation_table <- conservation_expl %>%
+  separate(`conservation abbreviation`, 
+           into = c("abbreviation", "description"), sep="=") %>%
+  mutate_all(str_trim))
+  #alternative: mutate_all(~str_replace_all(., " ", "")))
+```
+<br>
+
+The opposite is tidyr's `unite()` function. You specify the new column name, and then the columns to be united, and lastly what seperator you want to use. 
+
+
+
+```{r}
+#merging currency and goal columns
+conservation_table %>%
+  unite(united_col, abbreviation, description, sep=": ") %>%
+  select(united_col)
+```
+
+<br><br>
+
+## **Adding columns from other tables**
+
+If you want to add information from another type, you can use the joining functions from dplyr. The msleep data contains abbreviations for conservation but if you are not familiar with the topic you might need the description we used in the section above inside the msleep data.  
+
+
+```{r}
+#joining column data
+msleep %>%
+  select(name, conservation) %>%
+  mutate(conservation = toupper(conservation)) %>%
+  left_join(conservation_table, by = c("conservation" = "abbreviation")) %>%
+  mutate(description = ifelse(is.na(description), conservation, description))
+```
+
+
+
+
+
+## Mutating all columns
+
+
+```{r}
+msleep %>%
+  mutate_all(tolower)
+```
+
+```{r}
+msleep %>%
+  mutate_all(~str_replace_all(., "[aeiou]", ""))
+```
+
+
+mutate_if
+```{r}
+msleep %>%
+  mutate_if(is.numeric, round) %>%
+  select(sleep_total:bodywt)
+```
+
+
+## mutating specific columns
+
+
+All columns containing the word sleep are in hours, but if I want those in minutes, I can use `mutate_at()`. To indicate that I want the condition to be based on the column name I can use `vars(contains("sleep"))`.  
+The second argument of `mutate_at()` needs to be function, so I have to wrap my calculation instructions with a tilde to make a function on the fly.
+```{r}
+msleep %>%
+  mutate_at(vars(contains("sleep")), ~(.*60)) %>%
+  select(sleep_total:bodywt)
+```
+
