@@ -1,7 +1,7 @@
 ---
 title: "data_wranging_p1"
 output:
-  html_document:
+  md_document:
     toc: true
     toc_depth: 2
 ---
@@ -10,9 +10,10 @@ output:
 
 Data Wrangling Part 1: Basic to Advanced Ways to Select Columns
 
-I went through the entire dplyr documentation for a talk last week, which resulted in a few "aha!" moments. I discovered and re-discovered a few useful functions, which I wanted to collect in a few blog posts so I can share them with others.    
+I went through the entire dplyr documentation for a talk last week about pipes, which resulted in a few "aha!" moments. I discovered and re-discovered a few useful functions, which I wanted to collect in a few blog posts so I can share them with others.    
 This first post will cover ordering, naming and selecting columns. The next post will be about recoding and transforming columns, and after that I will move on to row selection. I changed dataset versus the talk last week to one that is built-in to R so code can be copy pasted and experimented with easily.  
 <br>
+All code will be presented as part of pipe even though hardly any of them are a full pipe. I did add `glimpse()` statement to allow you to see the columns selected in the output tibble without printing all the data every time. 
 
 
 **The dataset**
@@ -24,34 +25,26 @@ library(tidyverse)
 glimpse(msleep)
 ```
 
-To note: In some cases I have added a `glimpse()` statement to allow you to see the columns selected in the output tibble without printing all the data every time. 
-
 <br>
 
 -----
 
-<br>
-
-
-
 
 # **Selecting columns**
 
-## **Selecting columns by their full name**
+## **Selecting columns: the basics**
 To select a few columns just add their names in the select statement. The order in which you add them, will determine the order in which they appear in the output.
 ```{r}
-#adding selected columns
 msleep %>%
   select(name, genus, sleep_total, awake) %>%
-  glimpse
+  glimpse()
 ```
 <br>
 
-If want to add a lot of columns, it can save a lot of space to have a good look at your data and see whether you can't get to your selection by using chunks, deselecting or even deselect a column and re-add it straight after.  
+If you want to add a lot of columns, it can save you some typing to have a good look at your data and see whether you can't get to your selection by using chunks, deselecting or even deselect a column and re-add it straight after.  
   
 To add a chunk of columns use the `start_col:end_col` syntax:
 ```{r}
-#selecting chunks of columns
 msleep %>%
   select(name:order, sleep_total:sleep_cycle) %>%
   glimpse
@@ -66,7 +59,8 @@ msleep %>%
 ```
 <br>
 
-It's even possible to deselect a whole chunk, and then re-add a column again (as long as it is in the same select statement). This deselects the whole chunk from ID to pledged, but re-adds the 'name' (which was part of the deselected chunk).
+It's even possible to deselect a whole chunk, and then re-add a column again.  
+The below sample code deselects the whole chunk from ID to pledged, but re-adds the 'name', even though it was part of the deselected chunk. This only works if you re-add it in the same `select()` statement.
 ```{r}
 msleep %>%
   select(-(name:awake), conservation) %>%
@@ -77,15 +71,20 @@ msleep %>%
 
 
 
-## **Selecting columns based on partial names**
+## **Selecting columns based on partial column names**
 If you have a lot of columns with a similar structure you can use partial matching by adding `starts_with()`, `ends_with()` or `contains()` in your select statement depending on how you want to match columns.
-  
-In this particular dataframe it does not make a ton of sense to do this, but this would be the syntax:
 
 ```{r}
-#selecting based on partial matches
 msleep %>%
-  select(contains("eep"), starts_with("sleep"), ends_with("wt")) %>%
+  select(name, starts_with("sleep")) %>%
+  glimpse
+```
+
+
+
+```{r}
+msleep %>%
+  select(contains("eep"), ends_with("wt")) %>%
   glimpse
 ```
 <br><br>
@@ -96,7 +95,7 @@ msleep %>%
 
 ## **Selecting columns based on regex**
 The previous helper functions work with exact pattern matches. If you have similar patterns that are not entirely the same you can use any regular expression inside `matches()`.  
-The below example code will add any column that contains an 'o', followed by multiple other letters, and "er".
+The below example code will add any column that contains an 'o', followed by one or more other letters, and "er".
 
 ```{r}
 #selecting based on regex
@@ -110,7 +109,7 @@ msleep %>%
 
 
 ## **Selecting columns by their data type**
-The `select_if` function allows you to pass functions which return logical statements inside. For instance you can select all the string columns by passing `select_if(is.character)`. Similarly, you can add `is.numeric`, `is.integer`, `is.double`, `is.logical`, `is.factor`.  
+The `select_if` function allows you to pass functions which return logical statements. For instance you can select all the string columns by using `select_if(is.character)`. Similarly, you can add `is.numeric`, `is.integer`, `is.double`, `is.logical`, `is.factor`.  
 If you have data columns, you can load the `lubridate` package, and use `is.POSIXt` or `is.Date`.
 
 ```{r}
@@ -118,6 +117,7 @@ msleep %>%
   select_if(is.numeric) %>%
   glimpse
 ```
+<br>
 
 You can also select the negation but in this case you will need to add a tilde to ensure that you still pass a function to `select_if`.
 
@@ -145,9 +145,10 @@ or shorter:
 msleep %>%
   select_if(~is.numeric(.) & mean(., na.rm=TRUE) > 10)
 ```
+<br>
 
 One of the useful functions for `select_if` is `n_distinct()`, which counts the amount of distinct values that can be found in a column.  
-To return the columns that have less than 20 distinct answers for instance you pass  `~n_distinct(.) < 20` within the select_if statement. Given that in itself `n_distinct(.) < 20` is not a function, you will need to put a tilde in front. 
+To return the columns that have less than 20 distinct answers for instance you pass  `~n_distinct(.) < 20` within the select_if statement. Given that `n_distinct(.) < 20` is not a function, you will need to put a tilde in front. 
 
 ```{r}
 msleep %>%
@@ -157,8 +158,6 @@ msleep %>%
 <br>
 
 -----
-
-<br>
 
 
 
@@ -182,7 +181,6 @@ msleep %>%
 
 -----
 
-<br>
 
 # **Column names**
 Sometimes changes are necessary to column names in itself:
@@ -197,7 +195,7 @@ msleep %>%
 ```
 <br>
 
-If you want to retain all columns and therefore have no `select()` statement, you can rename by adding a 'rename' statement.
+If you want to retain all columns and therefore have no `select()` statement, you can rename by adding a `rename()` statement.
 ```{r}
 msleep %>% 
   rename(animal = name, extinction_threat = conservation) %>%
@@ -206,7 +204,7 @@ msleep %>%
 <br><br>
 
 
-## **Reformatting column names**
+## **Reformatting all column names**
 
 The `select_all()` function allows changes to all columns, and takes a function as an argument.  
   

@@ -115,6 +115,18 @@ kickstarter_sample %>%
 
 
 
+#not work
+msleep %>%
+  select_at(~is.numeric(.) | any.vars(matches("name")))
+
+#not work, vars(name) works, rest does not
+msleep %>%
+  select_at(vars(name) | any.vars(is.numeric(.)))
+
+msleep
+
+
+
 #### MAKING NEW COLUMNS ####
 
 #pasting together

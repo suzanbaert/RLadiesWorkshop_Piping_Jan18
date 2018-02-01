@@ -123,23 +123,29 @@ $(document).ready(function () {
 
 <div id="TOC">
 <ul>
-<li><a href="#getting-the-columns-you-need">Getting the columns you need:</a><ul>
-<li><a href="#transforming-data-into-a-new-column"><strong>Transforming data into a new column</strong></a></li>
-<li><a href="#workin-with-discrete-columns"><strong>Workin with discrete columns</strong></a></li>
-<li><a href="#merging-and-unmerging-columns"><strong>Merging and unmerging columns</strong></a></li>
-<li><a href="#adding-columns-from-other-tables"><strong>Adding columns from other tables</strong></a></li>
-<li><a href="#mutating-several-columns-at-once"><strong>Mutating several columns at once</strong></a></li>
-<li><a href="#mutating-specific-columns">mutating specific columns</a></li>
+<li><a href="#mutating-columns-the-basics"><strong>Mutating columns: the basics</strong></a></li>
+<li><a href="#working-with-discrete-columns"><strong>Working with discrete columns</strong></a><ul>
+<li><a href="#recoding-discrete-columns"><strong>Recoding discrete columns</strong></a></li>
+<li><a href="#creating-new-discrete-column-two-levels"><strong>Creating new discrete column (two levels)</strong></a></li>
+<li><a href="#creating-new-discrete-column-multiple-levels"><strong>Creating new discrete column (multiple levels)</strong></a></li>
+</ul></li>
+<li><a href="#splitting-and-merging-columns"><strong>Splitting and merging columns</strong></a></li>
+<li><a href="#bringing-in-columns-from-other-data-tables"><strong>Bringing in columns from other data tables</strong></a></li>
+<li><a href="#mutating-several-columns-at-once"><strong>Mutating several columns at once</strong></a><ul>
+<li><a href="#mutate_all"><strong>Mutate_all()</strong></a></li>
+<li><a href="#mutate_if"><strong>Mutate_if()</strong></a></li>
+<li><a href="#mutate_at-to-change-specifc-columns"><strong>Mutate_at() to change specifc columns</strong></a></li>
 </ul></li>
 </ul>
 </div>
 
-<p>This is a second post in a series of dplyr functions. The first one can be found here (link), and covered teh following elements - content</p>
-<p>this second one covers - content</p>
-<p><strong>The data</strong> As in the previous blog posts a lot of these functions truly when you have a lot of columns, but to make it easy on people to copy paste code and experiment, I’m using a built-in dataset:</p>
-<pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## Warning: package 'tibble' was built under R version 3.4.3</code></pre>
-<pre class="r"><code>glimpse(msleep)</code></pre>
+<p>This is a second post in a series of dplyr functions. The first one can be found here (link), and covered the basic and advanced selection of columns, renaming and reordering them.</p>
+<p>This second one covers tools to manipulate the data to get what you need. - content</p>
+<p><strong>The data</strong><br />
+As in the previous blog posts a lot of these functions truly when you have a lot of columns, but to make it easy on people to copy paste code and experiment, I’m using a built-in dataset:</p>
+<pre class="r"><code>library(tidyverse)
+
+glimpse(msleep)</code></pre>
 <pre><code>## Observations: 83
 ## Variables: 11
 ## $ name         &lt;chr&gt; &quot;Cheetah&quot;, &quot;Owl monkey&quot;, &quot;Mountain beaver&quot;, &quot;Grea...
@@ -153,16 +159,13 @@ $(document).ready(function () {
 ## $ awake        &lt;dbl&gt; 11.9, 7.0, 9.6, 9.1, 20.0, 9.6, 15.3, 17.0, 13.9,...
 ## $ brainwt      &lt;dbl&gt; NA, 0.01550, NA, 0.00029, 0.42300, NA, NA, NA, 0....
 ## $ bodywt       &lt;dbl&gt; 50.000, 0.480, 1.350, 0.019, 600.000, 3.850, 20.4...</code></pre>
-<p><br><br></p>
-<div id="getting-the-columns-you-need" class="section level1">
-<h1>Getting the columns you need:</h1>
-<div id="transforming-data-into-a-new-column" class="section level2">
-<h2><strong>Transforming data into a new column</strong></h2>
-<p>You can make new columns with the <code>mutate</code> function. The options inside mutate are almost endless: pretty much anything that you can do to normal vectors, can be done inside a mutate function.<br />
-Anything inside a mutate can either be a new column (by giving mutate a new column name), or can replace the current column (by keeping the same column name)</p>
-<p>One of the many options is a calculation based on values in other columns:</p>
-<pre class="r"><code>#new column for sleep time in minutes
-msleep %&gt;%
+<p><br></p>
+<div id="mutating-columns-the-basics" class="section level2">
+<h2><strong>Mutating columns: the basics</strong></h2>
+<p>You can make new columns with the <code>mutate()</code> function. The options inside mutate are almost endless: pretty much anything that you can do to normal vectors, can be done inside a mutate function.<br />
+Anything inside a mutate can either be a new column (by giving mutate a new column name), or can replace the current column (by keeping the same column name).</p>
+<p>One of the many options is a calculation based on values in other columns: in this code example we’re changing the sleep data from hour-based to minute-based numbers.</p>
+<pre class="r"><code>msleep %&gt;%
   select(name, sleep_total) %&gt;%
   mutate(sleep_total_min = sleep_total * 60)</code></pre>
 <pre><code>## # A tibble: 83 x 3
@@ -179,8 +182,8 @@ msleep %&gt;%
 ##  9 Dog                              10.1              606
 ## 10 Roe deer                          3.00             180
 ## # ... with 73 more rows</code></pre>
-<p><br></p>
-<p>The new column can be made with functions such as average, median, max, min, …</p>
+<p>New columns can be made with aggregate functions such as average, median, max, min, sd, …<br />
+The sample code makes two new columns: one showing the difference of each row versus the average sleep time, and one showing the difference versus the animal with the least sleep.</p>
 <pre class="r"><code>msleep %&gt;%
   select(name, sleep_total) %&gt;%
   mutate(sleep_total_vs_AVG = sleep_total - round(mean(sleep_total),1),
@@ -200,8 +203,8 @@ msleep %&gt;%
 ## 10 Roe deer                          3.00             -7.40           1.10
 ## # ... with 73 more rows</code></pre>
 <p><br></p>
-<p>The <code>ifelse</code> statement is particularly useful if you don’t want to mutate the whole column in the same way. You first specify a logical statement, afterwards what needs to happen if the statement returns <code>TRUE</code>, and lastly what needs to happen if it’s <code>FALSE</code>.</p>
-<p>Imagine that we have a database with two large values which we assume are typo’s or measurement errors:</p>
+<p>The <code>ifelse</code> statement deserves a special mention because it is particularly useful if you don’t want to mutate the whole column in the same way. With <code>ifelse()</code>, You first specify a logical statement, afterwards what needs to happen if the statement returns <code>TRUE</code>, and lastly what needs to happen if it’s <code>FALSE</code>.</p>
+<p>Imagine that we have a database with two large values which we assume are typo’s or measurement errors. The below code will take any brainwt value above 4 and return NA. It won’t change anything if the value is below 4.</p>
 <pre class="r"><code>msleep %&gt;%
   mutate(brainwt2 = ifelse(brainwt &gt; 4, NA, brainwt)) %&gt;%
   select(starts_with(&quot;brain&quot;)) %&gt;%
@@ -221,9 +224,9 @@ msleep %&gt;%
 ## 10   0.180    0.180
 ## # ... with 73 more rows</code></pre>
 <p><br></p>
-<p>You can also mutate string columns with stringr’s <code>str_extract()</code> function in combation with any character or regex patterns.</p>
-<pre class="r"><code>#adding new column which has only the first word of the project name
-msleep %&gt;%
+<p>You can also mutate string columns with stringr’s <code>str_extract()</code> function in combation with any character or regex patterns.<br />
+The sample code will return the last word of the animal name and makes it lower case.</p>
+<pre class="r"><code>msleep %&gt;%
   mutate(name_last_word = tolower(str_extract(name, pattern = &quot;\\w+$&quot;))) %&gt;%
   select(name, name_last_word)</code></pre>
 <pre><code>## # A tibble: 83 x 2
@@ -240,31 +243,49 @@ msleep %&gt;%
 ##  9 Dog                        dog           
 ## 10 Roe deer                   deer          
 ## # ... with 73 more rows</code></pre>
-<p><br><br></p>
+<p><br></p>
 </div>
-<div id="workin-with-discrete-columns" class="section level2">
-<h2><strong>Workin with discrete columns</strong></h2>
+<div id="working-with-discrete-columns" class="section level2">
+<h2><strong>Working with discrete columns</strong></h2>
 <div id="recoding-discrete-columns" class="section level3">
 <h3><strong>Recoding discrete columns</strong></h3>
-<p>To rename or reorganize current discrete columns, you can use <code>recode()</code> inside a <code>mutate()</code> statement:</p>
+<p>To rename or reorganize current discrete columns, you can use <code>recode()</code> inside a <code>mutate()</code> statement: this enables you to change the current naming, or to group current levels into less levels. The <code>.default</code> refers to anything that isn’t covered by the before groups with the exception of NA. You can change NA into something other than NA by adding a <code>.missing</code> argument (see next sample code).</p>
 <pre class="r"><code>msleep %&gt;%
   mutate(conservation2 = recode(conservation,
                         &quot;en&quot; = &quot;Endangered&quot;,
                         &quot;lc&quot; = &quot;Least_Concern&quot;,
+                        &quot;domesticated&quot; = &quot;Least_Concern&quot;,
                         .default = &quot;other&quot;)) %&gt;%
   count(conservation2)</code></pre>
 <pre><code>## # A tibble: 4 x 2
 ##   conservation2     n
 ##   &lt;chr&gt;         &lt;int&gt;
 ## 1 Endangered        4
-## 2 Least_Concern    27
-## 3 other            23
+## 2 Least_Concern    37
+## 3 other            13
 ## 4 &lt;NA&gt;             29</code></pre>
-<p><br></p>
+<p>A special version exists to return a factor: <code>recode_factor()</code>. By default the <code>.ordered</code> argument is <code>FALSE</code>. To return an ordered factor set the argument to <code>TRUE</code>.</p>
+<pre class="r"><code>msleep %&gt;%
+  mutate(conservation2 = recode_factor(conservation,
+                        &quot;en&quot; = &quot;Endangered&quot;,
+                        &quot;lc&quot; = &quot;Least_Concern&quot;,
+                        &quot;domesticated&quot; = &quot;Least_Concern&quot;,
+                        .default = &quot;other&quot;,
+                        .missing = &quot;no data&quot;,
+                        .ordered = TRUE)) %&gt;%
+  count(conservation2)</code></pre>
+<pre><code>## # A tibble: 4 x 2
+##   conservation2     n
+##   &lt;ord&gt;         &lt;int&gt;
+## 1 Endangered        4
+## 2 Least_Concern    37
+## 3 other            13
+## 4 no data          29</code></pre>
 </div>
 <div id="creating-new-discrete-column-two-levels" class="section level3">
 <h3><strong>Creating new discrete column (two levels)</strong></h3>
-<p>The <code>if_else()</code> statement is useful when you want to turn a numeric column into a discrete one.</p>
+<p>The <code>ifelse()</code> statement is useful when you want to turn a numeric column into a discrete one. As mentioned above, <code>ifelse()</code> takes a logical expression, then what to do if the expression returns <code>TRUE</code> and lastly what to do when it returns <code>FALSE</code>.<br />
+The sample code will divide the current measure <code>sleep_total</code> into a discrete “long” or “short” sleeper.</p>
 <pre class="r"><code>msleep %&gt;%
   mutate(sleep_time = ifelse(sleep_total &gt; 10, &quot;long&quot;, &quot;short&quot;)) %&gt;%
   glimpse</code></pre>
@@ -287,24 +308,24 @@ msleep %&gt;%
 <div id="creating-new-discrete-column-multiple-levels" class="section level3">
 <h3><strong>Creating new discrete column (multiple levels)</strong></h3>
 <p>The <code>ifelse()</code> can be nested but if you want more than two levels, it might be even easier to use <code>case_when()</code> which allows as many statements as you like.<br />
-The arguments are evaluated in order, so only the rows where the first statement is not true will continue to be evaluated for the next statement. For everything that is left at the end just use the <code>TRUE ~ &quot;newname&quot;</code>.</p>
+The arguments are evaluated in order, so only the rows where the first statement is not true will continue to be evaluated for the next statement. For everything that is left at the end just use the <code>TRUE ~ &quot;newname&quot;</code>.<br />
+Unfortunately there seems to be no easy way to get <code>case_when()</code> to return an ordered factor, so you will need to to do that yourself afterwards, either by using <code>forcats::fct_relevel</code>, or just with a <code>factor()</code> function. If you have a lot of levels I would advice to make a levels vector upfront to avoid cluttering the piple too much.</p>
 <pre class="r"><code>msleep %&gt;%
-  mutate(sleep_total_disc = case_when(
-    sleep_total &gt; 13 ~&quot;very long&quot;,
+  mutate(sleep_total_discr = case_when(
+    sleep_total &gt; 13 ~ &quot;very long&quot;,
     sleep_total &gt; 10 ~ &quot;long&quot;,
-    sleep_total &gt; 7 ~&quot;limited&quot;,
+    sleep_total &gt; 7 ~ &quot;limited&quot;,
     TRUE ~ &quot;short&quot;)) %&gt;%
-  mutate(sleep_total_disc = forcats::fct_relevel(sleep_total_disc, 
-                                                 &quot;short&quot;, &quot;limited&quot;, &quot;long&quot;, &quot;very long&quot;)) %&gt;%
-  count(sleep_total_disc)</code></pre>
+  mutate(sleep_total_discr = factor(sleep_total_discr, 
+                                    levels = c(&quot;short&quot;, &quot;limited&quot;, &quot;long&quot;, &quot;very long&quot;))) %&gt;%
+  count(sleep_total_discr)</code></pre>
 <pre><code>## # A tibble: 4 x 2
-##   sleep_total_disc     n
-##   &lt;fctr&gt;           &lt;int&gt;
-## 1 short               20
-## 2 limited             19
-## 3 long                21
-## 4 very long           23</code></pre>
-<p><br></p>
+##   sleep_total_discr     n
+##   &lt;fctr&gt;            &lt;int&gt;
+## 1 short                20
+## 2 limited              19
+## 3 long                 21
+## 4 very long            23</code></pre>
 <p>The <code>case_when()</code> function does not only work inside a column, but can be used for grouping across columns:</p>
 <pre class="r"><code>msleep %&gt;%
   mutate(silly_groups = case_when(
@@ -320,11 +341,11 @@ The arguments are evaluated in order, so only the rows where the first statement
 ## 2 lazy_sleeper    39
 ## 3 light_headed     6
 ## 4 other           30</code></pre>
-<p><br><br></p>
+<p><br></p>
 </div>
 </div>
-<div id="merging-and-unmerging-columns" class="section level2">
-<h2><strong>Merging and unmerging columns</strong></h2>
+<div id="splitting-and-merging-columns" class="section level2">
+<h2><strong>Splitting and merging columns</strong></h2>
 <p>Take for example this dataset</p>
 <pre class="r"><code>(conservation_expl &lt;- read_csv(&quot;conservation_explanation.csv&quot;))</code></pre>
 <pre><code>## Parsed with column specification:
@@ -345,14 +366,14 @@ The arguments are evaluated in order, so only the rows where the first statement
 ##  9 NE = Not evaluated                           
 ## 10 PE = Probably extinct (informal)             
 ## 11 PEW = Probably extinct in the wild (informal)</code></pre>
-<p>You can unmerge any columns by using tidyr’s <code>separate())</code> function. To do this, you have to specify the column to be splitted, followed by the new column names, and which seperator it has to look for.</p>
+<p>You can unmerge any columns by using tidyr’s <code>separate())</code> function. To do this, you have to specify the column to be splitted, followed by the new column names, and which seperator it has to look for.<br />
+The sample code shows seperating into two columns based with ‘=’ as a separator.</p>
 <pre class="r"><code>(conservation_table &lt;- conservation_expl %&gt;%
   separate(`conservation abbreviation`, 
-           into = c(&quot;abbreviation&quot;, &quot;description&quot;), sep=&quot;=&quot;) %&gt;%
-  mutate_all(str_trim))</code></pre>
+           into = c(&quot;abbreviation&quot;, &quot;description&quot;), sep = &quot; = &quot;))</code></pre>
 <pre><code>## # A tibble: 11 x 2
 ##    abbreviation description                            
-##    &lt;chr&gt;        &lt;chr&gt;                                  
+##  * &lt;chr&gt;        &lt;chr&gt;                                  
 ##  1 EX           Extinct                                
 ##  2 EW           Extinct in the wild                    
 ##  3 CR           Critically Endangered                  
@@ -364,8 +385,6 @@ The arguments are evaluated in order, so only the rows where the first statement
 ##  9 NE           Not evaluated                          
 ## 10 PE           Probably extinct (informal)            
 ## 11 PEW          Probably extinct in the wild (informal)</code></pre>
-<pre class="r"><code>  #alternative: mutate_all(~str_replace_all(., &quot; &quot;, &quot;&quot;)))</code></pre>
-<p><br></p>
 <p>The opposite is tidyr’s <code>unite()</code> function. You specify the new column name, and then the columns to be united, and lastly what seperator you want to use.</p>
 <pre class="r"><code>#merging currency and goal columns
 conservation_table %&gt;%
@@ -385,11 +404,13 @@ conservation_table %&gt;%
 ##  9 NE: Not evaluated                           
 ## 10 PE: Probably extinct (informal)             
 ## 11 PEW: Probably extinct in the wild (informal)</code></pre>
-<p><br><br></p>
+<p><br></p>
 </div>
-<div id="adding-columns-from-other-tables" class="section level2">
-<h2><strong>Adding columns from other tables</strong></h2>
-<p>If you want to add information from another type, you can use the joining functions from dplyr. The msleep data contains abbreviations for conservation but if you are not familiar with the topic you might need the description we used in the section above inside the msleep data.</p>
+<div id="bringing-in-columns-from-other-data-tables" class="section level2">
+<h2><strong>Bringing in columns from other data tables</strong></h2>
+<p>If you want to add information from another table, you can use the joining functions from <code>dplyr</code>. The msleep data contains abbreviations for conservation but if you are not familiar with the topic you might need the description we used in the section above inside the msleep data.<br />
+Joins would be a chapter in itself, but in this particular case you would do a <code>left_join()</code>, i.e. keeping my main table on the left, and adding columns from another one to the right. In the <code>by =</code> statement you specify which colums are the same, so the join knows what to add were.<br />
+The sample code will add the description of the different conservation states into our main <code>msleep</code> table. The main data contained an extra <code>domisticated</code> label which i wanted to keep. This is done in the last line of the table with an <code>ifelse()</code>.</p>
 <pre class="r"><code>#joining column data
 msleep %&gt;%
   select(name, conservation) %&gt;%
@@ -410,9 +431,15 @@ msleep %&gt;%
 ##  9 Dog                        DOMESTICATED DOMESTICATED   
 ## 10 Roe deer                   LC           Least Concern  
 ## # ... with 73 more rows</code></pre>
+<p><br></p>
 </div>
 <div id="mutating-several-columns-at-once" class="section level2">
 <h2><strong>Mutating several columns at once</strong></h2>
+<p>This is where the magic really happens. Just like with the <code>select()</code> functions in part 1, there are variants to <code>mutate()</code>: <code>mutate_all()</code>, <code>mutate_if()</code>, <code>mutate_at()</code>.</p>
+<div id="mutate_all" class="section level3">
+<h3><strong>Mutate_all()</strong></h3>
+<p>The <code>mutate_all()</code> version is the easiest to understand, and pretty nifty when cleaning your data.<br />
+Something easy to start with: turning all the data to lower case:</p>
 <pre class="r"><code>msleep %&gt;%
   mutate_all(tolower)</code></pre>
 <pre><code>## # A tibble: 83 x 11
@@ -429,6 +456,44 @@ msleep %&gt;%
 ##  9 dog      canis  carni carni~ domes~ 10.1  2.9   0.33~ 13.9  0.07  14   
 ## 10 roe deer capre~ herbi artio~ lc     3     &lt;NA&gt;  &lt;NA&gt;  21    0.09~ 14.8 
 ## # ... with 73 more rows</code></pre>
+<p>But I’ve also used it to trim whitespaces into an entire table without issues using: <code>mutate_all(str_trim)</code>. Or if you have data coming from the web, I often had too many <code>\n</code> signs spread across my data. This code can help you out:</p>
+<p>I’m first going to use <code>mutate_all()</code> to screw things up:</p>
+<pre class="r"><code>(msleep_ohno &lt;- msleep %&gt;%
+  mutate_all(~paste(., &quot;  /n  &quot;)))</code></pre>
+<pre><code>## # A tibble: 83 x 11
+##    name    genus  vore   order  conse~ slee~ slee~ slee~ awake brai~ body~
+##    &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+##  1 &quot;Cheet~ &quot;Acin~ &quot;carn~ &quot;Carn~ &quot;lc  ~ &quot;12.~ &quot;NA ~ &quot;NA ~ &quot;11.~ &quot;NA ~ &quot;50 ~
+##  2 &quot;Owl m~ &quot;Aotu~ &quot;omni~ &quot;Prim~ &quot;NA  ~ &quot;17 ~ &quot;1.8~ &quot;NA ~ &quot;7  ~ &quot;0.0~ &quot;0.4~
+##  3 &quot;Mount~ &quot;Aplo~ &quot;herb~ &quot;Rode~ &quot;nt  ~ &quot;14.~ &quot;2.4~ &quot;NA ~ &quot;9.6~ &quot;NA ~ &quot;1.3~
+##  4 &quot;Great~ &quot;Blar~ &quot;omni~ &quot;Sori~ &quot;lc  ~ &quot;14.~ &quot;2.3~ &quot;0.1~ &quot;9.1~ &quot;0.0~ &quot;0.0~
+##  5 &quot;Cow  ~ &quot;Bos ~ &quot;herb~ &quot;Arti~ &quot;dome~ &quot;4  ~ &quot;0.7~ &quot;0.6~ &quot;20 ~ &quot;0.4~ &quot;600~
+##  6 &quot;Three~ &quot;Brad~ &quot;herb~ &quot;Pilo~ &quot;NA  ~ &quot;14.~ &quot;2.2~ &quot;0.7~ &quot;9.6~ &quot;NA ~ &quot;3.8~
+##  7 &quot;North~ &quot;Call~ &quot;carn~ &quot;Carn~ &quot;vu  ~ &quot;8.7~ &quot;1.4~ &quot;0.3~ &quot;15.~ &quot;NA ~ &quot;20.~
+##  8 &quot;Vespe~ &quot;Calo~ &quot;NA  ~ &quot;Rode~ &quot;NA  ~ &quot;7  ~ &quot;NA ~ &quot;NA ~ &quot;17 ~ &quot;NA ~ &quot;0.0~
+##  9 &quot;Dog  ~ &quot;Cani~ &quot;carn~ &quot;Carn~ &quot;dome~ &quot;10.~ &quot;2.9~ &quot;0.3~ &quot;13.~ &quot;0.0~ &quot;14 ~
+## 10 &quot;Roe d~ &quot;Capr~ &quot;herb~ &quot;Arti~ &quot;lc  ~ &quot;3  ~ &quot;NA ~ &quot;NA ~ &quot;21 ~ &quot;0.0~ &quot;14.~
+## # ... with 73 more rows</code></pre>
+<p>No worries, it’s fixed almost as quick as I did it:<br />
+In this code I am assume that not all values show the same amount of extra white spaces as is often the case with parsed data:</p>
+<pre class="r"><code>msleep_ohno %&gt;%
+  mutate_all(str_trim) %&gt;%
+  mutate_all(~str_replace_all(., &quot;/n&quot;, &quot;&quot;))</code></pre>
+<pre><code>## # A tibble: 83 x 11
+##    name    genus  vore   order  conse~ slee~ slee~ slee~ awake brai~ body~
+##    &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+##  1 &quot;Cheet~ &quot;Acin~ &quot;carn~ &quot;Carn~ &quot;lc  ~ &quot;12.~ &quot;NA ~ &quot;NA ~ &quot;11.~ &quot;NA ~ &quot;50 ~
+##  2 &quot;Owl m~ &quot;Aotu~ &quot;omni~ &quot;Prim~ &quot;NA  ~ &quot;17 ~ &quot;1.8~ &quot;NA ~ &quot;7  ~ &quot;0.0~ &quot;0.4~
+##  3 &quot;Mount~ &quot;Aplo~ &quot;herb~ &quot;Rode~ &quot;nt  ~ &quot;14.~ &quot;2.4~ &quot;NA ~ &quot;9.6~ &quot;NA ~ &quot;1.3~
+##  4 &quot;Great~ &quot;Blar~ &quot;omni~ &quot;Sori~ &quot;lc  ~ &quot;14.~ &quot;2.3~ &quot;0.1~ &quot;9.1~ &quot;0.0~ &quot;0.0~
+##  5 &quot;Cow  ~ &quot;Bos ~ &quot;herb~ &quot;Arti~ &quot;dome~ &quot;4  ~ &quot;0.7~ &quot;0.6~ &quot;20 ~ &quot;0.4~ &quot;600~
+##  6 &quot;Three~ &quot;Brad~ &quot;herb~ &quot;Pilo~ &quot;NA  ~ &quot;14.~ &quot;2.2~ &quot;0.7~ &quot;9.6~ &quot;NA ~ &quot;3.8~
+##  7 &quot;North~ &quot;Call~ &quot;carn~ &quot;Carn~ &quot;vu  ~ &quot;8.7~ &quot;1.4~ &quot;0.3~ &quot;15.~ &quot;NA ~ &quot;20.~
+##  8 &quot;Vespe~ &quot;Calo~ &quot;NA  ~ &quot;Rode~ &quot;NA  ~ &quot;7  ~ &quot;NA ~ &quot;NA ~ &quot;17 ~ &quot;NA ~ &quot;0.0~
+##  9 &quot;Dog  ~ &quot;Cani~ &quot;carn~ &quot;Carn~ &quot;dome~ &quot;10.~ &quot;2.9~ &quot;0.3~ &quot;13.~ &quot;0.0~ &quot;14 ~
+## 10 &quot;Roe d~ &quot;Capr~ &quot;herb~ &quot;Arti~ &quot;lc  ~ &quot;3  ~ &quot;NA ~ &quot;NA ~ &quot;21 ~ &quot;0.0~ &quot;14.~
+## # ... with 73 more rows</code></pre>
+<p>Obviously you can use any regex inside <code>mutate_all()</code> as well.</p>
 <pre class="r"><code>msleep %&gt;%
   mutate_all(~str_replace_all(., &quot;[aeiou]&quot;, &quot;&quot;))</code></pre>
 <pre><code>## # A tibble: 83 x 11
@@ -445,29 +510,36 @@ msleep %&gt;%
 ##  9 Dg      Cns    crn   Crnvr  dmstc~ 10.1   2.9   0.33~ 13.9  0.07  14   
 ## 10 R dr    Cprls  hrb   Artdc~ lc     3      &lt;NA&gt;  &lt;NA&gt;  21    0.09~ 14.8 
 ## # ... with 73 more rows</code></pre>
-<p>mutate_if</p>
+</div>
+<div id="mutate_if" class="section level3">
+<h3><strong>Mutate_if()</strong></h3>
+<p>Not all cleaning functions can be done with <code>mutate_all)</code>. Trying to round your data will lead to an error:</p>
+<pre class="r"><code>msleep %&gt;%
+  mutate_all(round)</code></pre>
+<p><code>Error in mutate_impl(.data, dots) : Evaluation error: non-numeric argument to mathematical function.</code></p>
+<p>In these cases we have to add the condition that columns need to be numeric before giving <code>round()</code> instructions:<br />
+to note: if you want to round to a few digits you will need to make a function on the fly by using a tilde: such as ` mutate_if(is.numeric, ~round(. ,2)) %&gt;%</p>
 <pre class="r"><code>msleep %&gt;%
   mutate_if(is.numeric, round) %&gt;%
-  select(sleep_total:bodywt)</code></pre>
-<pre><code>## # A tibble: 83 x 6
-##    sleep_total sleep_rem sleep_cycle awake brainwt bodywt
-##          &lt;dbl&gt;     &lt;dbl&gt;       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;
-##  1       12.0      NA          NA    12.0       NA  50.0 
-##  2       17.0       2.00       NA     7.00       0   0   
-##  3       14.0       2.00       NA    10.0       NA   1.00
-##  4       15.0       2.00        0     9.00       0   0   
-##  5        4.00      1.00        1.00 20.0        0 600   
-##  6       14.0       2.00        1.00 10.0       NA   4.00
-##  7        9.00      1.00        0    15.0       NA  20.0 
-##  8        7.00     NA          NA    17.0       NA   0   
-##  9       10.0       3.00        0    14.0        0  14.0 
-## 10        3.00     NA          NA    21.0        0  15.0 
+  select(name, sleep_total:bodywt)</code></pre>
+<pre><code>## # A tibble: 83 x 7
+##    name                       sleep_total sleep~ sleep~ awake brai~ bodywt
+##    &lt;chr&gt;                            &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+##  1 Cheetah                          12.0   NA     NA    12.0     NA  50.0 
+##  2 Owl monkey                       17.0    2.00  NA     7.00     0   0   
+##  3 Mountain beaver                  14.0    2.00  NA    10.0     NA   1.00
+##  4 Greater short-tailed shrew       15.0    2.00   0     9.00     0   0   
+##  5 Cow                               4.00   1.00   1.00 20.0      0 600   
+##  6 Three-toed sloth                 14.0    2.00   1.00 10.0     NA   4.00
+##  7 Northern fur seal                 9.00   1.00   0    15.0     NA  20.0 
+##  8 Vesper mouse                      7.00  NA     NA    17.0     NA   0   
+##  9 Dog                              10.0    3.00   0    14.0      0  14.0 
+## 10 Roe deer                          3.00  NA     NA    21.0      0  15.0 
 ## # ... with 73 more rows</code></pre>
 </div>
-<div id="mutating-specific-columns" class="section level2">
-<h2>mutating specific columns</h2>
-<p>All columns containing the word sleep are in hours, but if I want those in minutes, I can use <code>mutate_at()</code>. To indicate that I want the condition to be based on the column name I can use <code>vars(contains(&quot;sleep&quot;))</code>.<br />
-The second argument of <code>mutate_at()</code> needs to be function, so I have to wrap my calculation instructions with a tilde to make a function on the fly.</p>
+<div id="mutate_at-to-change-specifc-columns" class="section level3">
+<h3><strong>Mutate_at() to change specifc columns</strong></h3>
+<p>All columns containing the word sleep are in hours. If I want those in minutes, I can use <code>mutate_at()</code>. To indicate that I want the condition to be based on the column name I can use <code>vars(contains(&quot;sleep&quot;))</code>. Inside <code>vars()</code> you can use any of the <code>select()</code>helpers. The second argument of <code>mutate_at()</code> needs to be function, so I have to wrap my calculation instructions with a tilde to make a function on the fly.</p>
 <pre class="r"><code>msleep %&gt;%
   mutate_at(vars(contains(&quot;sleep&quot;)), ~(.*60)) %&gt;%
   select(sleep_total:bodywt)</code></pre>
